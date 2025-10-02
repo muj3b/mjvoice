@@ -1,0 +1,785 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		00957F155BAFFCC6837B4DE2 /* TextFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FE165D6E94AC43E019A76C5 /* TextFormatter.swift */; };
+		0319095324EB99B0317C7E7A /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE3DC7B90EFBE8FEA5EEF3A /* Preferences.swift */; };
+		0871815E4793491ECB05EBED /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25D98DC589A768AA2EA88761 /* PreferencesView.swift */; };
+		0A4569CABD3C03E0EC64891F /* WhisperEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 473B57A339C3D99DB05F27A0 /* WhisperEngine.swift */; };
+		19321D1444094E2FD648D007 /* LLMService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 369F047746961F27B8E7087C /* LLMService.swift */; };
+		20B4BA7D48CC80820CA6B282 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CD901DFD9D471C49B68B3E5 /* AppDelegate.swift */; };
+		21164E7B27D61B43F32CACEE /* MicHUDWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54817C28E2009F60A8C1316F /* MicHUDWindow.swift */; };
+		2588637DD020DA22F48D5526 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB45C928EF4F98BC02779837 /* main.swift */; };
+		282356CA6AAAFA8A02FD7C33 /* BatteryThermalMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17F2C0B43369D02C32656037 /* BatteryThermalMonitor.swift */; };
+		325A66EA777867838BB52A65 /* TextInserter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A751C0C678D2EE7D68EE1051 /* TextInserter.swift */; };
+		3CCCC03B01988C2595AF19E1 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5990ACCD160E4624BB30063 /* Logger.swift */; };
+		3EDDAACDAF452F69A9A77D1C /* ASRServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBDFF0496B6D90E8C2514593 /* ASRServiceProtocol.swift */; };
+		4AAF75486AAD0BE4A4465421 /* AudioVADService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D072B8EC6EF8F6F871C62895 /* AudioVADService.swift */; };
+		660B7052E90FC49782D23127 /* MainApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA5C80E05A213B5ED2E1720B /* MainApp.swift */; };
+		6D00AD64EAE3A1E933F5B10D /* GlobalHotkey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70B67A0DF05B91300EA177BB /* GlobalHotkey.swift */; };
+		744DBAFB9323DDA00F0BB5AC /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C145EAC2FF1A3256D9D7E7F6 /* OnboardingView.swift */; };
+		84077E9F42C9A31E9938F091 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B702446DCBB7FF5F0A8CC0E /* main.swift */; };
+		86BF14C83C0066D3AFD99F1E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA44A4AA8B525D983D95B5F6 /* main.swift */; };
+		8D0B1C7591CC3BB450A7520E /* ASRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50BC02652140BEE182D0CB9 /* ASRService.swift */; };
+		96605C6A94B58B114C975C66 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 77F1EC7D279DE9014262C84D /* PrivacyInfo.xcprivacy */; };
+		978A30DF359F7DA1E745688A /* FormatterEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4AF70FDD9EBC1BB4D9AB8E9 /* FormatterEngine.swift */; };
+		A4AE2AD75F2446C045F1AFE6 /* ModelLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31861138A42CD5F739F9A4D5 /* ModelLoader.swift */; };
+		A94D23169C382A6DC045818C /* PerformanceMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 782A13F82BCB1D6410CC320D /* PerformanceMetrics.swift */; };
+		AAA1FCD4F5DCBEC8A10515C7 /* LLMServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46FE9B3047A3869F1B390643 /* LLMServiceProtocol.swift */; };
+		BE92452C4A3F48B628D139D8 /* ASRClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA1484B28CD5DFBE09C724A2 /* ASRClient.swift */; };
+		C50808C18A15BC44692DA808 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7EE3D0D99484F2EDE8E4AAD8 /* Assets.xcassets */; };
+		C76448BFCA53196ACCD723D5 /* MicHUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E25C4910078D80D53188AE1A /* MicHUDView.swift */; };
+		CB753CF66F222E62B58FBAE4 /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 771EC14BE88169328839CB74 /* MenuBarController.swift */; };
+		CF52755DE7F5BC15B4E7BA76 /* silero-vad-unified-256ms-v6.0.0.mlmodelc in Resources */ = {isa = PBXBuildFile; fileRef = E0A664043E7CA1689B328676 /* silero-vad-unified-256ms-v6.0.0.mlmodelc */; };
+		DBA46003A128A28DA2C2B016 /* AudioVADServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77F4556077FE4A4D8C426C43 /* AudioVADServiceProtocol.swift */; };
+		DCDB5F5C2C28B5C4C8E73E12 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = 524BAE02AA3BE0561DA51330 /* WhisperKit */; };
+		E1D22CDB5B6E105ACA3FC78D /* XPCConnectionFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B7C411571A7ABA348CC8288 /* XPCConnectionFactory.swift */; };
+		E63AF0CEC5E744E8D8F9DE39 /* NotesWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 017BFA5DD50E2ED7E7CE1742 /* NotesWindow.swift */; };
+		EF8789AAAB5B06ADEA314EF8 /* AudioEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7AF113AE63904ADFE51452C /* AudioEngine.swift */; };
+		F5C6C69E88E3D0A38121CEA4 /* VAD.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A6A6C6A13B44CA7DCF047B /* VAD.swift */; };
+		FCED370E8FBD3D4458DC300A /* SecureInputMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DE9355873A7025FFD917C10 /* SecureInputMonitor.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		017BFA5DD50E2ED7E7CE1742 /* NotesWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesWindow.swift; sourceTree = "<group>"; };
+		0C68E0B1D6F5036680745945 /* LLMService.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LLMService.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		17F2C0B43369D02C32656037 /* BatteryThermalMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryThermalMonitor.swift; sourceTree = "<group>"; };
+		23804516D7B13D56CE2D7C00 /* ASRService.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ASRService.entitlements; sourceTree = "<group>"; };
+		25D98DC589A768AA2EA88761 /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
+		2AB3CDD592DFC42B8F689D3A /* LLMService.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LLMService.entitlements; sourceTree = "<group>"; };
+		31861138A42CD5F739F9A4D5 /* ModelLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelLoader.swift; sourceTree = "<group>"; };
+		369F047746961F27B8E7087C /* LLMService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMService.swift; sourceTree = "<group>"; };
+		3B7C411571A7ABA348CC8288 /* XPCConnectionFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XPCConnectionFactory.swift; sourceTree = "<group>"; };
+		3D494B9C5EF9776E4B672B9B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		46FE9B3047A3869F1B390643 /* LLMServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMServiceProtocol.swift; sourceTree = "<group>"; };
+		473B57A339C3D99DB05F27A0 /* WhisperEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhisperEngine.swift; sourceTree = "<group>"; };
+		4FE3DC7B90EFBE8FEA5EEF3A /* Preferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
+		54817C28E2009F60A8C1316F /* MicHUDWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicHUDWindow.swift; sourceTree = "<group>"; };
+		5CD901DFD9D471C49B68B3E5 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		70B67A0DF05B91300EA177BB /* GlobalHotkey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotkey.swift; sourceTree = "<group>"; };
+		771EC14BE88169328839CB74 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
+		77F1EC7D279DE9014262C84D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		77F4556077FE4A4D8C426C43 /* AudioVADServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioVADServiceProtocol.swift; sourceTree = "<group>"; };
+		782A13F82BCB1D6410CC320D /* PerformanceMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceMetrics.swift; sourceTree = "<group>"; };
+		7CA59EEDE9F8160E3433E1B8 /* mjvoice.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = mjvoice.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7EE3D0D99484F2EDE8E4AAD8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		8B702446DCBB7FF5F0A8CC0E /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		8FE165D6E94AC43E019A76C5 /* TextFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFormatter.swift; sourceTree = "<group>"; };
+		9A29A71667E799D3C882E875 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		9DE9355873A7025FFD917C10 /* SecureInputMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureInputMonitor.swift; sourceTree = "<group>"; };
+		A751C0C678D2EE7D68EE1051 /* TextInserter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextInserter.swift; sourceTree = "<group>"; };
+		AB45C928EF4F98BC02779837 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		B50BC02652140BEE182D0CB9 /* ASRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ASRService.swift; sourceTree = "<group>"; };
+		BA1484B28CD5DFBE09C724A2 /* ASRClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ASRClient.swift; sourceTree = "<group>"; };
+		BA705656F30E55E36FD3793B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		C145EAC2FF1A3256D9D7E7F6 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		C1A6A6C6A13B44CA7DCF047B /* VAD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VAD.swift; sourceTree = "<group>"; };
+		C4AF70FDD9EBC1BB4D9AB8E9 /* FormatterEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormatterEngine.swift; sourceTree = "<group>"; };
+		C5990ACCD160E4624BB30063 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
+		C5A5F069DB2B654C2F485847 /* AudioVADService.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = AudioVADService.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		C7AF113AE63904ADFE51452C /* AudioEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEngine.swift; sourceTree = "<group>"; };
+		CA5C80E05A213B5ED2E1720B /* MainApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainApp.swift; sourceTree = "<group>"; };
+		CBDFF0496B6D90E8C2514593 /* ASRServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ASRServiceProtocol.swift; sourceTree = "<group>"; };
+		D072B8EC6EF8F6F871C62895 /* AudioVADService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioVADService.swift; sourceTree = "<group>"; };
+		D7F9184A0B2754C994DEB7FB /* ASRService.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ASRService.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		DD188581E00E56075AE4EE4D /* AudioVADService.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AudioVADService.entitlements; sourceTree = "<group>"; };
+		E0A664043E7CA1689B328676 /* silero-vad-unified-256ms-v6.0.0.mlmodelc */ = {isa = PBXFileReference; path = "silero-vad-unified-256ms-v6.0.0.mlmodelc"; sourceTree = "<group>"; };
+		E25C4910078D80D53188AE1A /* MicHUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicHUDView.swift; sourceTree = "<group>"; };
+		EF086E21E270B11EB2BABECC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		FA44A4AA8B525D983D95B5F6 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		FE196E46ED83D30031F903E3 /* mjvoice.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = mjvoice.entitlements; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		33655BE4E239A170F3279A73 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DCDB5F5C2C28B5C4C8E73E12 /* WhisperKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2B806C400558DEEE09D96F25 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				4FE3DC7B90EFBE8FEA5EEF3A /* Preferences.swift */,
+			);
+			name = Models;
+			path = Shared/Models;
+			sourceTree = "<group>";
+		};
+		2D7A1CB2825360D99DEE8ECE /* ASRService */ = {
+			isa = PBXGroup;
+			children = (
+				23804516D7B13D56CE2D7C00 /* ASRService.entitlements */,
+				B50BC02652140BEE182D0CB9 /* ASRService.swift */,
+				3D494B9C5EF9776E4B672B9B /* Info.plist */,
+				FA44A4AA8B525D983D95B5F6 /* main.swift */,
+				31861138A42CD5F739F9A4D5 /* ModelLoader.swift */,
+				473B57A339C3D99DB05F27A0 /* WhisperEngine.swift */,
+			);
+			name = ASRService;
+			path = Workers/ASRService;
+			sourceTree = "<group>";
+		};
+		3BFCF4B32F1A26564BB6CFA8 /* LLMService */ = {
+			isa = PBXGroup;
+			children = (
+				C4AF70FDD9EBC1BB4D9AB8E9 /* FormatterEngine.swift */,
+				9A29A71667E799D3C882E875 /* Info.plist */,
+				2AB3CDD592DFC42B8F689D3A /* LLMService.entitlements */,
+				369F047746961F27B8E7087C /* LLMService.swift */,
+				AB45C928EF4F98BC02779837 /* main.swift */,
+			);
+			name = LLMService;
+			path = Workers/LLMService;
+			sourceTree = "<group>";
+		};
+		3E3D7E7BF1B0745EAB527959 /* HUD */ = {
+			isa = PBXGroup;
+			children = (
+				E25C4910078D80D53188AE1A /* MicHUDView.swift */,
+				54817C28E2009F60A8C1316F /* MicHUDWindow.swift */,
+			);
+			path = HUD;
+			sourceTree = "<group>";
+		};
+		6CC037B6B7BF2178B370C360 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				7EE3D0D99484F2EDE8E4AAD8 /* Assets.xcassets */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		6CDFABA0528313DF76EC6670 /* mjvoice */ = {
+			isa = PBXGroup;
+			children = (
+				5CD901DFD9D471C49B68B3E5 /* AppDelegate.swift */,
+				70B67A0DF05B91300EA177BB /* GlobalHotkey.swift */,
+				EF086E21E270B11EB2BABECC /* Info.plist */,
+				CA5C80E05A213B5ED2E1720B /* MainApp.swift */,
+				771EC14BE88169328839CB74 /* MenuBarController.swift */,
+				FE196E46ED83D30031F903E3 /* mjvoice.entitlements */,
+				017BFA5DD50E2ED7E7CE1742 /* NotesWindow.swift */,
+				C145EAC2FF1A3256D9D7E7F6 /* OnboardingView.swift */,
+				25D98DC589A768AA2EA88761 /* PreferencesView.swift */,
+				D2C2EF5CDFF330E931939F2C /* Accessibility */,
+				EC90B9969D2C7123E5848A86 /* Audio */,
+				3E3D7E7BF1B0745EAB527959 /* HUD */,
+			);
+			path = mjvoice;
+			sourceTree = "<group>";
+		};
+		82B65795DE15F8ACF9007499 /* VAD */ = {
+			isa = PBXGroup;
+			children = (
+				E0A664043E7CA1689B328676 /* silero-vad-unified-256ms-v6.0.0.mlmodelc */,
+			);
+			name = VAD;
+			path = Shared/Models/VAD;
+			sourceTree = "<group>";
+		};
+		8943A12BE3B6DE38EB2A38AC /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				77F1EC7D279DE9014262C84D /* PrivacyInfo.xcprivacy */,
+			);
+			name = Resources;
+			path = Shared/Resources;
+			sourceTree = "<group>";
+		};
+		932B0DECA371F0B3421D83AB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D7F9184A0B2754C994DEB7FB /* ASRService.appex */,
+				C5A5F069DB2B654C2F485847 /* AudioVADService.appex */,
+				0C68E0B1D6F5036680745945 /* LLMService.appex */,
+				7CA59EEDE9F8160E3433E1B8 /* mjvoice.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C074271A2A5BB0C30967CA74 /* AudioVADService */ = {
+			isa = PBXGroup;
+			children = (
+				DD188581E00E56075AE4EE4D /* AudioVADService.entitlements */,
+				D072B8EC6EF8F6F871C62895 /* AudioVADService.swift */,
+				BA705656F30E55E36FD3793B /* Info.plist */,
+				8B702446DCBB7FF5F0A8CC0E /* main.swift */,
+			);
+			name = AudioVADService;
+			path = Workers/AudioVADService;
+			sourceTree = "<group>";
+		};
+		D2C2EF5CDFF330E931939F2C /* Accessibility */ = {
+			isa = PBXGroup;
+			children = (
+				9DE9355873A7025FFD917C10 /* SecureInputMonitor.swift */,
+				A751C0C678D2EE7D68EE1051 /* TextInserter.swift */,
+			);
+			path = Accessibility;
+			sourceTree = "<group>";
+		};
+		D375508495E3300B6F5F512E /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				17F2C0B43369D02C32656037 /* BatteryThermalMonitor.swift */,
+				C5990ACCD160E4624BB30063 /* Logger.swift */,
+				782A13F82BCB1D6410CC320D /* PerformanceMetrics.swift */,
+				8FE165D6E94AC43E019A76C5 /* TextFormatter.swift */,
+				3B7C411571A7ABA348CC8288 /* XPCConnectionFactory.swift */,
+			);
+			name = Utilities;
+			path = Shared/Utilities;
+			sourceTree = "<group>";
+		};
+		EC90B9969D2C7123E5848A86 /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				BA1484B28CD5DFBE09C724A2 /* ASRClient.swift */,
+				C7AF113AE63904ADFE51452C /* AudioEngine.swift */,
+				C1A6A6C6A13B44CA7DCF047B /* VAD.swift */,
+			);
+			path = Audio;
+			sourceTree = "<group>";
+		};
+		F4F627A9269C31B655856D88 = {
+			isa = PBXGroup;
+			children = (
+				2D7A1CB2825360D99DEE8ECE /* ASRService */,
+				C074271A2A5BB0C30967CA74 /* AudioVADService */,
+				3BFCF4B32F1A26564BB6CFA8 /* LLMService */,
+				6CDFABA0528313DF76EC6670 /* mjvoice */,
+				2B806C400558DEEE09D96F25 /* Models */,
+				8943A12BE3B6DE38EB2A38AC /* Resources */,
+				6CC037B6B7BF2178B370C360 /* Shared */,
+				D375508495E3300B6F5F512E /* Utilities */,
+				82B65795DE15F8ACF9007499 /* VAD */,
+				FA2038C6DE1DB50AE9F4115C /* XPCProtocols */,
+				932B0DECA371F0B3421D83AB /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		FA2038C6DE1DB50AE9F4115C /* XPCProtocols */ = {
+			isa = PBXGroup;
+			children = (
+				CBDFF0496B6D90E8C2514593 /* ASRServiceProtocol.swift */,
+				77F4556077FE4A4D8C426C43 /* AudioVADServiceProtocol.swift */,
+				46FE9B3047A3869F1B390643 /* LLMServiceProtocol.swift */,
+			);
+			name = XPCProtocols;
+			path = Shared/XPCProtocols;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		3F20D5C6D9CA3D785D4B007D /* LLMService */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 35AEF3E1460AC2DB5DEDFB6E /* Build configuration list for PBXNativeTarget "LLMService" */;
+			buildPhases = (
+				7255B59B22525D0B54D24813 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LLMService;
+			packageProductDependencies = (
+			);
+			productName = LLMService;
+			productReference = 0C68E0B1D6F5036680745945 /* LLMService.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		4DF62B08E1C75C037707A9C8 /* AudioVADService */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4A44F78E87E8381F7B70C83F /* Build configuration list for PBXNativeTarget "AudioVADService" */;
+			buildPhases = (
+				FF1644149D7D29ECF6F44B50 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AudioVADService;
+			packageProductDependencies = (
+			);
+			productName = AudioVADService;
+			productReference = C5A5F069DB2B654C2F485847 /* AudioVADService.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		8B47E6030EE1CB8032FF623B /* mjvoice */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3184B447BE06C2975248725D /* Build configuration list for PBXNativeTarget "mjvoice" */;
+			buildPhases = (
+				8E11319153C11E31FCD10845 /* Sources */,
+				3851CBF310DBC452BFC3963A /* Resources */,
+				33655BE4E239A170F3279A73 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = mjvoice;
+			packageProductDependencies = (
+				524BAE02AA3BE0561DA51330 /* WhisperKit */,
+			);
+			productName = mjvoice;
+			productReference = 7CA59EEDE9F8160E3433E1B8 /* mjvoice.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A447B83A75847151C6358D10 /* ASRService */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 67A53DBAAC9A9760412296E8 /* Build configuration list for PBXNativeTarget "ASRService" */;
+			buildPhases = (
+				8523394F9D435F0DBA6C1134 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ASRService;
+			packageProductDependencies = (
+			);
+			productName = ASRService;
+			productReference = D7F9184A0B2754C994DEB7FB /* ASRService.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		8599851266754DA713DE79DF /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+			};
+			buildConfigurationList = 406037116BBF45C9183533EB /* Build configuration list for PBXProject "mjvoice" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = F4F627A9269C31B655856D88;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				FE3BD59A193E188ED0748901 /* XCRemoteSwiftPackageReference "WhisperKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A447B83A75847151C6358D10 /* ASRService */,
+				4DF62B08E1C75C037707A9C8 /* AudioVADService */,
+				3F20D5C6D9CA3D785D4B007D /* LLMService */,
+				8B47E6030EE1CB8032FF623B /* mjvoice */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		3851CBF310DBC452BFC3963A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C50808C18A15BC44692DA808 /* Assets.xcassets in Resources */,
+				96605C6A94B58B114C975C66 /* PrivacyInfo.xcprivacy in Resources */,
+				CF52755DE7F5BC15B4E7BA76 /* silero-vad-unified-256ms-v6.0.0.mlmodelc in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		7255B59B22525D0B54D24813 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				978A30DF359F7DA1E745688A /* FormatterEngine.swift in Sources */,
+				19321D1444094E2FD648D007 /* LLMService.swift in Sources */,
+				2588637DD020DA22F48D5526 /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8523394F9D435F0DBA6C1134 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D0B1C7591CC3BB450A7520E /* ASRService.swift in Sources */,
+				A4AE2AD75F2446C045F1AFE6 /* ModelLoader.swift in Sources */,
+				0A4569CABD3C03E0EC64891F /* WhisperEngine.swift in Sources */,
+				86BF14C83C0066D3AFD99F1E /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8E11319153C11E31FCD10845 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BE92452C4A3F48B628D139D8 /* ASRClient.swift in Sources */,
+				3EDDAACDAF452F69A9A77D1C /* ASRServiceProtocol.swift in Sources */,
+				20B4BA7D48CC80820CA6B282 /* AppDelegate.swift in Sources */,
+				EF8789AAAB5B06ADEA314EF8 /* AudioEngine.swift in Sources */,
+				DBA46003A128A28DA2C2B016 /* AudioVADServiceProtocol.swift in Sources */,
+				282356CA6AAAFA8A02FD7C33 /* BatteryThermalMonitor.swift in Sources */,
+				6D00AD64EAE3A1E933F5B10D /* GlobalHotkey.swift in Sources */,
+				AAA1FCD4F5DCBEC8A10515C7 /* LLMServiceProtocol.swift in Sources */,
+				3CCCC03B01988C2595AF19E1 /* Logger.swift in Sources */,
+				660B7052E90FC49782D23127 /* MainApp.swift in Sources */,
+				CB753CF66F222E62B58FBAE4 /* MenuBarController.swift in Sources */,
+				C76448BFCA53196ACCD723D5 /* MicHUDView.swift in Sources */,
+				21164E7B27D61B43F32CACEE /* MicHUDWindow.swift in Sources */,
+				E63AF0CEC5E744E8D8F9DE39 /* NotesWindow.swift in Sources */,
+				744DBAFB9323DDA00F0BB5AC /* OnboardingView.swift in Sources */,
+				A94D23169C382A6DC045818C /* PerformanceMetrics.swift in Sources */,
+				0319095324EB99B0317C7E7A /* Preferences.swift in Sources */,
+				0871815E4793491ECB05EBED /* PreferencesView.swift in Sources */,
+				FCED370E8FBD3D4458DC300A /* SecureInputMonitor.swift in Sources */,
+				00957F155BAFFCC6837B4DE2 /* TextFormatter.swift in Sources */,
+				325A66EA777867838BB52A65 /* TextInserter.swift in Sources */,
+				F5C6C69E88E3D0A38121CEA4 /* VAD.swift in Sources */,
+				E1D22CDB5B6E105ACA3FC78D /* XPCConnectionFactory.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FF1644149D7D29ECF6F44B50 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4AAF75486AAD0BE4A4465421 /* AudioVADService.swift in Sources */,
+				84077E9F42C9A31E9938F091 /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		20FFED67C38BA81EC0E06C52 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		24B0C2C1570294C238122B9E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = mjvoice/mjvoice.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = mjvoice/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mujeb.mjvoice;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		3503F4AA96A82DC439E7CF0F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Workers/ASRService/ASRService.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Workers/ASRService/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mujeb.mjvoice.ASRService;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		6ABD37DCDA44D40F5217DCCC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		74445336A0538F74A84EB60A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Workers/LLMService/LLMService.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Workers/LLMService/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mujeb.mjvoice.LLMService;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		9678C6978F5D3CEE40A7B3CC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Workers/ASRService/ASRService.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Workers/ASRService/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mujeb.mjvoice.ASRService;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		AA877A68778216CEDC383927 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Workers/AudioVADService/AudioVADService.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Workers/AudioVADService/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mujeb.mjvoice.AudioVADService;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		BD671E2C4F6A7814ED89C921 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Workers/AudioVADService/AudioVADService.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Workers/AudioVADService/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mujeb.mjvoice.AudioVADService;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		CA44843AC0CE581512382C54 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = mjvoice/mjvoice.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = mjvoice/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mujeb.mjvoice;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		F0AFC1CD2E26AE6E2F9A8837 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Workers/LLMService/LLMService.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Workers/LLMService/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mujeb.mjvoice.LLMService;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		3184B447BE06C2975248725D /* Build configuration list for PBXNativeTarget "mjvoice" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CA44843AC0CE581512382C54 /* Debug */,
+				24B0C2C1570294C238122B9E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		35AEF3E1460AC2DB5DEDFB6E /* Build configuration list for PBXNativeTarget "LLMService" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				74445336A0538F74A84EB60A /* Debug */,
+				F0AFC1CD2E26AE6E2F9A8837 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		406037116BBF45C9183533EB /* Build configuration list for PBXProject "mjvoice" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6ABD37DCDA44D40F5217DCCC /* Debug */,
+				20FFED67C38BA81EC0E06C52 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		4A44F78E87E8381F7B70C83F /* Build configuration list for PBXNativeTarget "AudioVADService" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BD671E2C4F6A7814ED89C921 /* Debug */,
+				AA877A68778216CEDC383927 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		67A53DBAAC9A9760412296E8 /* Build configuration list for PBXNativeTarget "ASRService" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3503F4AA96A82DC439E7CF0F /* Debug */,
+				9678C6978F5D3CEE40A7B3CC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		FE3BD59A193E188ED0748901 /* XCRemoteSwiftPackageReference "WhisperKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/argmaxinc/WhisperKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		524BAE02AA3BE0561DA51330 /* WhisperKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FE3BD59A193E188ED0748901 /* XCRemoteSwiftPackageReference "WhisperKit" */;
+			productName = WhisperKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 8599851266754DA713DE79DF /* Project object */;
+}

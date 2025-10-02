@@ -1,0 +1,1 @@
+Placeholder for chime sound (<50KB). Replace with .aiff later.

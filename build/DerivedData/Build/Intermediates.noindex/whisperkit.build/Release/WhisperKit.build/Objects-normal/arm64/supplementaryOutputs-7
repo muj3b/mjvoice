@@ -1,0 +1,12 @@
+{
+  "/Users/mujeb/mjvoice/build/DerivedData/SourcePackages/checkouts/WhisperKit/Sources/WhisperKit/Core/Audio/AudioChunker.swift" : {
+    "abi-baseline-json" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/whisperkit.build/Release/WhisperKit.build/Objects-normal/arm64/WhisperKit.abi.json",
+    "const-values" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/whisperkit.build/Release/WhisperKit.build/Objects-normal/arm64/WhisperKit-primary.swiftconstvalues",
+    "dependencies" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/whisperkit.build/Release/WhisperKit.build/Objects-normal/arm64/WhisperKit-primary.d",
+    "diagnostics" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/whisperkit.build/Release/WhisperKit.build/Objects-normal/arm64/WhisperKit-primary.dia",
+    "objc-header" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/whisperkit.build/Release/WhisperKit.build/Objects-normal/arm64/WhisperKit-Swift.h",
+    "swiftdoc" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/whisperkit.build/Release/WhisperKit.build/Objects-normal/arm64/WhisperKit.swiftdoc",
+    "swiftmodule" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/whisperkit.build/Release/WhisperKit.build/Objects-normal/arm64/WhisperKit.swiftmodule",
+    "swiftsourceinfo" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/whisperkit.build/Release/WhisperKit.build/Objects-normal/arm64/WhisperKit.swiftsourceinfo"
+  }
+}

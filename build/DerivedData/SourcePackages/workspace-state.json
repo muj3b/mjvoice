@@ -1,0 +1,98 @@
+{
+  "object" : {
+    "artifacts" : [
+
+    ],
+    "dependencies" : [
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "jinja",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/johnmai-dev/Jinja",
+          "name" : "Jinja"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "5c0a87846dfd36ca6621795ad2f09fdaab82b739",
+            "version" : "1.3.0"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "Jinja"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "swift-argument-parser",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/apple/swift-argument-parser.git",
+          "name" : "swift-argument-parser"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "309a47b2b1d9b5e991f36961c983ecec72275be3",
+            "version" : "1.6.1"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "swift-argument-parser"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "swift-collections",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/apple/swift-collections.git",
+          "name" : "swift-collections"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "7b847a3b7008b2dc2f47ca3110d8c782fb2e5c7e",
+            "version" : "1.3.0"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "swift-collections"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "swift-transformers",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/huggingface/swift-transformers.git",
+          "name" : "swift-transformers"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "8a83416cc00ab07a5de9991e6ad817a9b8588d20",
+            "version" : "0.1.15"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "swift-transformers"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "whisperkit",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/argmaxinc/WhisperKit.git",
+          "name" : "WhisperKit"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "3f451e14fdd29276fbf548343e17a50b2bfd16f7",
+            "version" : "0.14.0"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "WhisperKit"
+      }
+    ],
+    "prebuilts" : [
+
+    ]
+  },
+  "version" : 7
+}

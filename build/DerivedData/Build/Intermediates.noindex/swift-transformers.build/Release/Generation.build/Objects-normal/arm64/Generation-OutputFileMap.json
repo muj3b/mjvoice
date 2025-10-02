@@ -1,0 +1,21 @@
+{
+  "" : {
+    "const-values" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/swift-transformers.build/Release/Generation.build/Objects-normal/arm64/Generation-primary.swiftconstvalues",
+    "dependencies" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/swift-transformers.build/Release/Generation.build/Objects-normal/arm64/Generation-primary.d",
+    "diagnostics" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/swift-transformers.build/Release/Generation.build/Objects-normal/arm64/Generation-primary.dia",
+    "emit-module-dependencies" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/swift-transformers.build/Release/Generation.build/Objects-normal/arm64/Generation-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/swift-transformers.build/Release/Generation.build/Objects-normal/arm64/Generation-primary-emit-module.dia",
+    "pch" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/swift-transformers.build/Release/Generation.build/Objects-normal/arm64/Generation-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/swift-transformers.build/Release/Generation.build/Objects-normal/arm64/Generation-primary.swiftdeps"
+  },
+  "/Users/mujeb/mjvoice/build/DerivedData/SourcePackages/checkouts/swift-transformers/Sources/Generation/Generation.swift" : {
+    "index-unit-output-path" : "/swift-transformers.build/Release/Generation.build/Objects-normal/arm64/Generation.o",
+    "llvm-bc" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/swift-transformers.build/Release/Generation.build/Objects-normal/arm64/Generation.bc",
+    "object" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/swift-transformers.build/Release/Generation.build/Objects-normal/arm64/Generation.o"
+  },
+  "/Users/mujeb/mjvoice/build/DerivedData/SourcePackages/checkouts/swift-transformers/Sources/Generation/GenerationConfig.swift" : {
+    "index-unit-output-path" : "/swift-transformers.build/Release/Generation.build/Objects-normal/arm64/GenerationConfig.o",
+    "llvm-bc" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/swift-transformers.build/Release/Generation.build/Objects-normal/arm64/GenerationConfig.bc",
+    "object" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/swift-transformers.build/Release/Generation.build/Objects-normal/arm64/GenerationConfig.o"
+  }
+}

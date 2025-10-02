@@ -1,0 +1,12 @@
+{
+  "/Users/mujeb/mjvoice/mjvoice/Audio/ASRClient.swift" : {
+    "abi-baseline-json" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/mjvoice.build/Release/mjvoice.build/Objects-normal/arm64/mjvoice.abi.json",
+    "const-values" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/mjvoice.build/Release/mjvoice.build/Objects-normal/arm64/mjvoice-primary.swiftconstvalues",
+    "dependencies" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/mjvoice.build/Release/mjvoice.build/Objects-normal/arm64/mjvoice-primary.d",
+    "diagnostics" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/mjvoice.build/Release/mjvoice.build/Objects-normal/arm64/mjvoice-primary.dia",
+    "objc-header" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/mjvoice.build/Release/mjvoice.build/Objects-normal/arm64/mjvoice-Swift.h",
+    "swiftdoc" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/mjvoice.build/Release/mjvoice.build/Objects-normal/arm64/mjvoice.swiftdoc",
+    "swiftmodule" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/mjvoice.build/Release/mjvoice.build/Objects-normal/arm64/mjvoice.swiftmodule",
+    "swiftsourceinfo" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/mjvoice.build/Release/mjvoice.build/Objects-normal/arm64/mjvoice.swiftsourceinfo"
+  }
+}

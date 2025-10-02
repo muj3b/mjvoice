@@ -1,0 +1,62 @@
+name: mjvoice
+options:
+  bundleIdPrefix: com.mujeb
+  deploymentTarget:
+    macOS: "13.0"
+targets:
+  mjvoice:
+    type: application
+    platform: macOS
+    sources:
+      - path: mjvoice
+      - path: Shared/Models/Preferences.swift
+      - path: Shared/Models/VAD/silero-vad-unified-256ms-v6.0.0.mlmodelc
+      - path: Shared/Resources
+      - path: Shared/Utilities/BatteryThermalMonitor.swift
+      - path: Shared/Utilities/Logger.swift
+      - path: Shared/Utilities/PerformanceMetrics.swift
+      - path: Shared/Utilities/TextFormatter.swift
+      - path: Shared/Utilities/XPCConnectionFactory.swift
+      - path: Shared/XPCProtocols
+      - path: Shared/Assets.xcassets
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mujeb.mjvoice
+        CODE_SIGN_ENTITLEMENTS: mjvoice/mjvoice.entitlements
+        INFOPLIST_FILE: mjvoice/Info.plist
+    dependencies:
+      - package: WhisperKit
+  ASRService:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: Workers/ASRService
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mujeb.mjvoice.ASRService
+        CODE_SIGN_ENTITLEMENTS: Workers/ASRService/ASRService.entitlements
+        INFOPLIST_FILE: Workers/ASRService/Info.plist
+  AudioVADService:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: Workers/AudioVADService
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mujeb.mjvoice.AudioVADService
+        CODE_SIGN_ENTITLEMENTS: Workers/AudioVADService/AudioVADService.entitlements
+        INFOPLIST_FILE: Workers/AudioVADService/Info.plist
+  LLMService:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: Workers/LLMService
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mujeb.mjvoice.LLMService
+        CODE_SIGN_ENTITLEMENTS: Workers/LLMService/LLMService.entitlements
+        INFOPLIST_FILE: Workers/LLMService/Info.plist
+packages:
+  WhisperKit:
+    url: https://github.com/argmaxinc/WhisperKit.git
+    from: 0.0.0

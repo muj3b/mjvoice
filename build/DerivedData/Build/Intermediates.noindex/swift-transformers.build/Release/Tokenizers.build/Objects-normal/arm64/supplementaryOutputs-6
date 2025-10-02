@@ -1,0 +1,12 @@
+{
+  "/Users/mujeb/mjvoice/build/DerivedData/SourcePackages/checkouts/swift-transformers/Sources/Tokenizers/BPETokenizer.swift" : {
+    "abi-baseline-json" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/swift-transformers.build/Release/Tokenizers.build/Objects-normal/arm64/Tokenizers.abi.json",
+    "const-values" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/swift-transformers.build/Release/Tokenizers.build/Objects-normal/arm64/Tokenizers-primary.swiftconstvalues",
+    "dependencies" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/swift-transformers.build/Release/Tokenizers.build/Objects-normal/arm64/Tokenizers-primary.d",
+    "diagnostics" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/swift-transformers.build/Release/Tokenizers.build/Objects-normal/arm64/Tokenizers-primary.dia",
+    "objc-header" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/swift-transformers.build/Release/Tokenizers.build/Objects-normal/arm64/Tokenizers-Swift.h",
+    "swiftdoc" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/swift-transformers.build/Release/Tokenizers.build/Objects-normal/arm64/Tokenizers.swiftdoc",
+    "swiftmodule" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/swift-transformers.build/Release/Tokenizers.build/Objects-normal/arm64/Tokenizers.swiftmodule",
+    "swiftsourceinfo" : "/Users/mujeb/mjvoice/build/DerivedData/Build/Intermediates.noindex/swift-transformers.build/Release/Tokenizers.build/Objects-normal/arm64/Tokenizers.swiftsourceinfo"
+  }
+}
