@@ -22,11 +22,14 @@ final class DashboardWindowController: NSWindowController {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func show() {
+    func show(section: DashboardItem? = nil) {
         guard let window else { return }
         window.contentView = NSHostingView(rootView: DashboardView())
         window.orderFrontRegardless()
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+        if let section {
+            NotificationCenter.default.post(name: .dashboardNavigate, object: section.rawValue)
+        }
     }
 }

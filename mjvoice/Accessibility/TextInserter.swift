@@ -107,5 +107,8 @@ final class TextInserter {
         notification.title = "Dictation copied to clipboard"
         notification.informativeText = "mjvoice saved your transcript because no editable field was focused."
         NSUserNotificationCenter.default.deliver(notification)
+        Task { @MainActor in
+            EventLogStore.shared.record(type: .clipboardFallback, message: "Transcript copied to clipboard")
+        }
     }
 }

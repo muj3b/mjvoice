@@ -66,6 +66,7 @@ fi
 
 # Use create-dmg for professional DMG
 if command -v create-dmg >/dev/null 2>&1; then
+    set +e
     if [ ${#BACKGROUND_OPT[@]} -gt 0 ]; then
         create-dmg \
             --volname "mjvoice" \
@@ -91,6 +92,19 @@ if command -v create-dmg >/dev/null 2>&1; then
             --app-drop-link 600 185 \
             "$BUILD_DIR/$DMG_NAME" \
             "$DMG_DIR/"
+    fi
+    STATUS=$?
+    set -e
+    if [ $STATUS -ne 0 ]; then
+        echo "create-dmg exited with $STATUS, attempting to clean up and fall back to hdiutil..."
+        for dev in $(hdiutil info | awk '/dmg\./ && /mjvoice/ {print $1}'); do
+            hdiutil detach "$dev" >/dev/null 2>&1 || true
+        done
+        hdiutil create -volname "mjvoice" -srcfolder "$DMG_DIR" -ov -format UDZO "$BUILD_DIR/$DMG_NAME"
+    else
+        for dev in $(hdiutil info | awk '/dmg\./ && /mjvoice/ {print $1}'); do
+            hdiutil detach "$dev" >/dev/null 2>&1 || true
+        done
     fi
 else
     # Fallback to hdiutil

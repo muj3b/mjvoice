@@ -16,6 +16,9 @@ targets:
       - path: Shared/Utilities/Logger.swift
       - path: Shared/Utilities/PerformanceMetrics.swift
       - path: Shared/Utilities/ModelManager.swift
+      - path: Shared/Utilities/EventLogStore.swift
+      - path: Shared/Utilities/SnippetStore.swift
+      - path: Shared/Utilities/FluidRuntimeInstaller.swift
       - path: Shared/Utilities/UsageStore.swift
       - path: Shared/Utilities/TextFormatter.swift
       - path: Shared/Utilities/XPCConnectionFactory.swift

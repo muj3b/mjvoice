@@ -21,14 +21,14 @@
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>LSUIElement</key>
-	<true/>
-	<key>NSMainNibFile</key>
-	<string></string>
-	<key>NSPrincipalClass</key>
-	<string>NSApplication</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>mjvoice needs microphone access to enable dictation.</string>
+	<false/>
 	<key>NSAppleEventsUsageDescription</key>
 	<string>mjvoice uses Apple Events/Accessibility to insert text into other apps when permitted.</string>
+	<key>NSMainNibFile</key>
+	<string></string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>mjvoice needs microphone access to enable dictation.</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
 </dict>
 </plist>

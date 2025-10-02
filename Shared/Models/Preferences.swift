@@ -147,4 +147,21 @@ public final class PreferencesStore {
         }
         return added
     }
+
+    public func addCustomVocabularyTerm(_ term: String) {
+        let cleaned = term.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleaned.isEmpty else { return }
+        update { prefs in
+            if !prefs.customVocab.contains(cleaned) {
+                prefs.customVocab.append(cleaned)
+                prefs.customVocab.sort()
+            }
+        }
+    }
+
+    public func removeCustomVocabularyTerm(_ term: String) {
+        update { prefs in
+            prefs.customVocab.removeAll { $0.caseInsensitiveCompare(term) == .orderedSame }
+        }
+    }
 }

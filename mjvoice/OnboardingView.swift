@@ -217,6 +217,9 @@ struct OnboardingView: View {
                 case .failure(let error):
                     self.modelDownloaded = false
                     NSApp.presentError(error)
+                    Task { @MainActor in
+                        EventLogStore.shared.record(type: .modelDownloadFailed, message: "ASR model download failed: \(error.localizedDescription)")
+                    }
                 }
             }
         }
@@ -233,8 +236,14 @@ struct OnboardingView: View {
                 switch result {
                 case .success:
                     self.modelDownloaded = true
+                    Task { @MainActor in
+                        EventLogStore.shared.record(type: .modelDownload, message: "Noise model ready")
+                    }
                 case .failure(let error):
                     NSApp.presentError(error)
+                    Task { @MainActor in
+                        EventLogStore.shared.record(type: .modelDownloadFailed, message: "Noise model failed: \(error.localizedDescription)")
+                    }
                 }
             }
         }

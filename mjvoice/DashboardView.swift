@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 import UniformTypeIdentifiers
 
-private enum DashboardItem: Hashable {
+enum DashboardItem: String, Hashable, CaseIterable {
     case home
     case tone
     case hotkeys
@@ -17,7 +17,15 @@ private enum DashboardItem: Hashable {
 struct DashboardView: View {
     @State private var selection: DashboardItem = .home
     @ObservedObject private var usage = UsageStore.shared
+    @ObservedObject private var snippetStore = SnippetStore.shared
+    @ObservedObject private var eventLog = EventLogStore.shared
     @State private var showingPreferences = false
+    @State private var customVocabulary = PreferencesStore.shared.current.customVocab.sorted()
+    @State private var newTerm: String = ""
+    @State private var showingAddSnippet = false
+    @State private var snippetTitle: String = ""
+    @State private var snippetBody: String = ""
+    @State private var selectedNote: TranscriptionRecord?
 
     private var username: String {
         let full = NSFullUserName()
@@ -39,6 +47,16 @@ struct DashboardView: View {
         .sheet(isPresented: $showingPreferences) {
             PreferencesView()
                 .frame(width: 560)
+        }
+        .sheet(isPresented: $showingAddSnippet) {
+            snippetComposer
+                .frame(width: 420, height: 320)
+        }
+        .onAppear { refreshVocabulary() }
+        .onReceive(NotificationCenter.default.publisher(for: .dashboardNavigate)) { note in
+            if let raw = note.object as? String, let item = DashboardItem(rawValue: raw) {
+                selection = item
+            }
         }
     }
 
@@ -155,34 +173,239 @@ struct DashboardView: View {
 
     private var dictionaryView: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Custom Dictionary")
-                .font(.title)
-            Text("Import domain vocabulary and manage pronunciations.")
-                .foregroundStyle(.secondary)
-            Button("Import CSV…", action: importVocabulary)
-            Spacer()
+            HStack {
+                VStack(alignment: .leading) {
+                    Text("Custom Dictionary")
+                        .font(.title)
+                    Text("Terms are used to bias the transcription engine and reduce spelling mistakes.")
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button(action: importVocabulary) {
+                    Label("Import CSV", systemImage: "square.and.arrow.down")
+                }
+            }
+            HStack {
+                TextField("Add new term", text: $newTerm)
+                    .textFieldStyle(.roundedBorder)
+                    .onSubmit(addVocabularyTerm)
+                Button("Add", action: addVocabularyTerm)
+                    .buttonStyle(.bordered)
+            }
+            List {
+                ForEach(customVocabulary, id: \.self) { term in
+                    HStack {
+                        Text(term)
+                        Spacer()
+                        Button(role: .destructive) {
+                            removeVocabularyTerm(term)
+                        } label: {
+                            Image(systemName: "trash")
+                        }
+                        .buttonStyle(.borderless)
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
         }
         .padding(32)
     }
 
     private var snippetsView: some View {
-        PlaceholderView(title: "Snippets", message: "Create reusable text snippets and voice shortcuts.")
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Snippets")
+                    .font(.title)
+                Spacer()
+                Button {
+                    showingAddSnippet = true
+                } label: {
+                    Label("New Snippet", systemImage: "plus")
+                }
+            }
+            Text("Save templated responses and insert them with a single click.")
+                .foregroundStyle(.secondary)
+
+            List {
+                ForEach(snippetStore.snippets) { snippet in
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Text(snippet.title)
+                                .font(.headline)
+                            Spacer()
+                            if let last = snippet.lastUsedAt {
+                                Text("Used " + last.relativeDescription())
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        Text(snippet.content)
+                            .font(.body)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(3)
+
+                        HStack {
+                            Button {
+                                insertSnippet(snippet)
+                            } label: {
+                                Label("Insert", systemImage: "text.insert")
+                            }
+                            Button {
+                                copySnippet(snippet)
+                            } label: {
+                                Label("Copy", systemImage: "doc.on.doc")
+                            }
+                            Button(role: .destructive) {
+                                snippetStore.remove(snippet)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                            .buttonStyle(.borderless)
+                        }
+                    }
+                    .padding(.vertical, 6)
+                }
+            }
+        }
+        .padding(32)
     }
 
     private var notesView: some View {
-        PlaceholderView(title: "Notes", message: "Review your scratchpad entries and export them as Markdown.")
+        let noteGroups = usage.groupedHistory().map { (date: $0.date, records: $0.records.filter { $0.destination == .notes }) }.filter { !$0.records.isEmpty }
+        return VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Notes")
+                    .font(.title)
+                Spacer()
+                Button {
+                    NotesWindow.shared.makeKeyAndOrderFront(nil)
+                } label: {
+                    Label("Open Scratchpad", systemImage: "square.and.pencil")
+                }
+            }
+            Text("Dictation sessions captured in Notes mode are stored here.")
+                .foregroundStyle(.secondary)
+
+            if noteGroups.isEmpty {
+                Spacer()
+                EmptyStateView(title: "No notes yet", systemImage: "note.text", message: "Hold your hotkey and switch to Notes mode to start collecting ideas.")
+                Spacer()
+            } else {
+                List {
+                    ForEach(noteGroups, id: \.date) { group in
+                        Section(header: Text(group.date, style: .date)) {
+                            ForEach(group.records) { record in
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text(record.timestamp, style: .time)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                    Text(record.text)
+                                        .font(.body)
+                                    HStack {
+                                        Button("Copy") { copyToPasteboard(record.text) }
+                                        Button("Open in Notes") {
+                                            NotesWindow.shared.makeKeyAndOrderFront(nil)
+                                            NotesWindow.shared.append(text: "\n---\n" + record.text)
+                                        }
+                                    }
+                                    .buttonStyle(.bordered)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .padding(32)
     }
 
     private var notificationsView: some View {
-        PlaceholderView(title: "Notifications", message: "Manage desktop alerts for clipboard fallback and model updates.")
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Activity")
+                    .font(.title)
+                Spacer()
+                Button("Mark all read") { eventLog.markAllRead() }
+                    .disabled(eventLog.entries.allSatisfy { $0.isRead })
+            }
+            Text("mjvoice keeps a local audit trail for clipboard fallbacks, downloads, and snippet actions.")
+                .foregroundStyle(.secondary)
+
+            if eventLog.entries.isEmpty {
+                Spacer()
+                EmptyStateView(title: "No activity yet", systemImage: "bell.slash", message: "You'll see recent events here once you start dictating.")
+                Spacer()
+            } else {
+                List(eventLog.entries) { entry in
+                    HStack(alignment: .top, spacing: 12) {
+                        Image(systemName: icon(for: entry.type))
+                            .foregroundStyle(color(for: entry.type))
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(entry.message)
+                            Text(entry.date.relativeDescription())
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                    }
+                    .padding(.vertical, 4)
+                    .opacity(entry.isRead ? 0.5 : 1)
+                }
+            }
+        }
+        .padding(32)
     }
 
     private var accountView: some View {
-        PlaceholderView(title: "Account", message: "Sign in to sync settings across devices (coming soon).")
+        let prefs = PreferencesStore.shared.current
+        return VStack(alignment: .leading, spacing: 16) {
+            Text("Account & Settings")
+                .font(.title)
+            Form {
+                LabeledContent("Mode") { Text(prefs.defaultMode.rawValue.capitalized) }
+                LabeledContent("PTT") { Text(prefs.pttMode.rawValue) }
+                LabeledContent("ASR Model") {
+                    Text(modelSummary(for: prefs))
+                }
+                LabeledContent("Noise Model") {
+                    Text(prefs.selectedNoiseModelID ?? prefs.noiseModel.rawValue)
+                }
+                LabeledContent("Offline Mode") { Text(prefs.offlineMode ? "Enabled" : "Disabled") }
+            }
+            Spacer()
+        }
+        .padding(32)
     }
 
     private var helpView: some View {
-        PlaceholderView(title: "Help", message: "Browse guides, FAQs, and contact support.")
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Help & Support")
+                .font(.title)
+            Text("Need a refresher? Open the guides, watch the quickstart, or contact mjvoice support.")
+                .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 12) {
+                Button {
+                    openURL("https://docs.mjvoice.app/guide")
+                    EventLogStore.shared.record(type: .helpOpened, message: "Opened user guide")
+                } label: {
+                    Label("User Guide", systemImage: "book")
+                }
+                Button {
+                    openURL("https://docs.mjvoice.app/shortcuts")
+                    EventLogStore.shared.record(type: .helpOpened, message: "Viewed keyboard shortcuts")
+                } label: {
+                    Label("Keyboard Shortcuts", systemImage: "keyboard")
+                }
+                Button {
+                    openURL("mailto:support@mjvoice.app")
+                    EventLogStore.shared.record(type: .helpOpened, message: "Drafted support email")
+                } label: {
+                    Label("Email Support", systemImage: "envelope")
+                }
+            }
+            Spacer()
+        }
+        .padding(32)
     }
 
     private var promotionalCard: some View {
@@ -326,10 +549,36 @@ private struct SidebarLink: View {
     let title: String
     let icon: String
     var body: some View {
-        HStack {
-            Image(systemName: icon)
-            Text(title)
+        Button {
+            NotificationCenter.default.post(name: .dashboardNavigate, object: DashboardItem.help.rawValue)
+        } label: {
+            HStack {
+                Image(systemName: icon)
+                Text(title)
+            }
         }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct EmptyStateView: View {
+    let title: String
+    let systemImage: String
+    let message: String
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: systemImage)
+                .font(.system(size: 48))
+                .foregroundStyle(.secondary)
+            Text(title)
+                .font(.title3)
+            Text(message)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: 300)
+        }
+        .padding()
     }
 }
 
@@ -359,6 +608,116 @@ extension DashboardView {
             guard response == .OK, let url = panel.url else { return }
             let count = PreferencesStore.shared.importCustomVocab(from: url)
             NSLog("[Dashboard] Imported \(count) custom vocabulary entries")
+            refreshVocabulary()
         }
     }
+
+    private func addVocabularyTerm() {
+        let term = newTerm.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !term.isEmpty else { return }
+        PreferencesStore.shared.addCustomVocabularyTerm(term)
+        newTerm = ""
+        refreshVocabulary()
+    }
+
+    private func removeVocabularyTerm(_ term: String) {
+        PreferencesStore.shared.removeCustomVocabularyTerm(term)
+        refreshVocabulary()
+    }
+
+    private func refreshVocabulary() {
+        customVocabulary = PreferencesStore.shared.current.customVocab.sorted()
+    }
+
+    private var snippetComposer: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("New Snippet")
+                .font(.title2)
+            TextField("Title", text: $snippetTitle)
+            TextEditor(text: $snippetBody)
+                .frame(minHeight: 140)
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.secondary.opacity(0.2)))
+            HStack {
+                Spacer()
+                Button("Cancel") {
+                    showingAddSnippet = false
+                    snippetTitle = ""
+                    snippetBody = ""
+                }
+                Button("Save") {
+                    let title = snippetTitle.isEmpty ? "Snippet" : snippetTitle
+                    snippetStore.add(title: title, content: snippetBody)
+                    showingAddSnippet = false
+                    snippetTitle = ""
+                    snippetBody = ""
+                }
+                .disabled(snippetBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+        }
+        .padding()
+    }
+
+    private func insertSnippet(_ snippet: Snippet) {
+        let outcome = TextInserter.shared.insert(text: snippet.content)
+        snippetStore.markUsed(snippet)
+        if case .clipboard = outcome {
+            EventLogStore.shared.record(type: .clipboardFallback, message: "Snippet copied to clipboard")
+        }
+    }
+
+    private func copySnippet(_ snippet: Snippet) {
+        copyToPasteboard(snippet.content)
+        snippetStore.markUsed(snippet)
+    }
+
+    private func icon(for type: EventLogEntry.EventType) -> String {
+        switch type {
+        case .clipboardFallback: return "doc.on.clipboard"
+        case .modelDownload: return "arrow.down.circle"
+        case .modelDownloadFailed: return "exclamationmark.triangle"
+        case .snippetCreated: return "plus.square.on.square"
+        case .snippetInserted: return "text.insert"
+        case .noteCaptured: return "note.text"
+        case .helpOpened: return "questionmark.circle"
+        }
+    }
+
+    private func color(for type: EventLogEntry.EventType) -> Color {
+        switch type {
+        case .clipboardFallback: return .blue
+        case .modelDownload: return .green
+        case .modelDownloadFailed: return .red
+        case .snippetCreated: return .purple
+        case .snippetInserted: return .purple
+        case .noteCaptured: return .orange
+        case .helpOpened: return .mint
+        }
+    }
+
+    private func modelSummary(for prefs: UserPreferences) -> String {
+        prefs.selectedASRModelID ?? "\(prefs.asrModel.rawValue.capitalized) \(prefs.modelSize.rawValue.capitalized)"
+    }
+
+    private func openURL(_ string: String) {
+        guard let url = URL(string: string) else { return }
+        NSWorkspace.shared.open(url)
+    }
+
+    private func copyToPasteboard(_ string: String) {
+        let pb = NSPasteboard.general
+        pb.clearContents()
+        pb.setString(string, forType: .string)
+    }
+}
+
+private extension Date {
+    func relativeDescription() -> String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .short
+        return formatter.localizedString(for: self, relativeTo: Date())
+    }
+}
+
+extension Notification.Name {
+    static let dashboardNavigate = Notification.Name("dashboardNavigate")
 }

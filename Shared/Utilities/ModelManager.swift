@@ -17,6 +17,7 @@ struct ModelDescriptor: Codable, Identifiable, Hashable {
     let sizeMB: Double
     let engineHint: String?
     let notes: String?
+    let components: [ModelComponent]?
 
     init(id: String,
          name: String,
@@ -27,7 +28,8 @@ struct ModelDescriptor: Codable, Identifiable, Hashable {
          expectedFilename: String,
          sizeMB: Double,
          engineHint: String? = nil,
-         notes: String? = nil) {
+         notes: String? = nil,
+         components: [ModelComponent]? = nil) {
         self.id = id
         self.name = name
         self.provider = provider
@@ -38,7 +40,13 @@ struct ModelDescriptor: Codable, Identifiable, Hashable {
         self.sizeMB = sizeMB
         self.engineHint = engineHint
         self.notes = notes
+        self.components = components
     }
+}
+
+struct ModelComponent: Codable, Hashable {
+    let filename: String
+    let downloadURL: URL
 }
 
 struct InstalledModelRecord: Codable {
@@ -73,22 +81,47 @@ final class ModelManager: NSObject {
     static let modelsDidChangeNotification = Notification.Name("ModelManagerModelsDidChange")
 
     struct DownloadHandle {
-        fileprivate let taskIdentifier: Int
+        fileprivate let descriptorID: String
         public func cancel() {
-            ModelManager.shared.cancelDownload(taskIdentifier)
+            ModelManager.shared.cancelDownload(descriptorID)
         }
     }
 
-    private struct DownloadContext {
+    private final class DownloadContext {
         let descriptor: ModelDescriptor
         let progress: (Double) -> Void
         let completion: (Result<URL, Error>) -> Void
+        let components: [ModelComponent]
+        var currentIndex: Int = 0
+        let destinationURL: URL
+        let relativePath: String
+        var currentBytesWritten: Int64 = 0
+        var currentBytesExpected: Int64 = 0
+        var totalComponentCount: Int { components.count }
+
+        init(descriptor: ModelDescriptor,
+             components: [ModelComponent],
+             destinationURL: URL,
+             relativePath: String,
+             progress: @escaping (Double) -> Void,
+             completion: @escaping (Result<URL, Error>) -> Void) {
+            self.descriptor = descriptor
+            self.components = components
+            self.destinationURL = destinationURL
+            self.relativePath = relativePath
+            self.progress = progress
+            self.completion = completion
+        }
     }
 
     private let fileManager = FileManager.default
     private let queue = DispatchQueue(label: "com.mjvoice.model-manager", qos: .userInitiated)
     private let modelsDirectory: URL
     private let metadataURL: URL
+    private let bundledNoiseResources: [String: (name: String, ext: String, subdirectory: String)] = [
+        "dtln-rs": ("dtln-rs-2025", "tflite", "BundledModels"),
+        "rnnoise": ("rnnoise-classic", "bin", "BundledModels")
+    ]
     private lazy var session: URLSession = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
 
     private var installedRecords: [String: InstalledModelRecord] = [:]
@@ -164,6 +197,13 @@ final class ModelManager: NSObject {
             completion(.failure(ModelManagerError.descriptorUnavailable))
             return nil
         }
+        if let bundledURL = installBundledNoiseIfAvailable(for: descriptor) {
+            DispatchQueue.main.async {
+                progress(1.0)
+                completion(.success(bundledURL))
+            }
+            return nil
+        }
         return download(descriptor: descriptor, progress: progress, completion: completion)
     }
 
@@ -178,15 +218,52 @@ final class ModelManager: NSObject {
                 }
             }
 
-            if let existing = activeDownloads.first(where: { $0.value.descriptor.id == descriptor.id }) {
+            if let _ = activeDownloads.first(where: { $0.value.descriptor.id == descriptor.id }) {
                 DispatchQueue.main.async { completion(.failure(ModelManagerError.downloadInProgress)) }
-                return DownloadHandle(taskIdentifier: existing.key)
+                return DownloadHandle(descriptorID: descriptor.id)
             }
 
-            let task = session.downloadTask(with: descriptor.downloadURL)
-            activeDownloads[task.taskIdentifier] = DownloadContext(descriptor: descriptor, progress: progress, completion: completion)
-            task.resume()
-            return DownloadHandle(taskIdentifier: task.taskIdentifier)
+            let components = descriptor.components ?? [ModelComponent(filename: descriptor.expectedFilename, downloadURL: descriptor.downloadURL)]
+            guard !components.isEmpty else {
+                DispatchQueue.main.async { completion(.failure(ModelManagerError.descriptorUnavailable)) }
+                return nil
+            }
+
+            let isSingleFile = components.count == 1 && descriptor.components == nil
+            let destination: URL
+            let relativePath: String
+            if isSingleFile {
+                destination = modelsDirectory.appendingPathComponent(descriptor.expectedFilename)
+                relativePath = descriptor.expectedFilename
+            } else {
+                destination = modelsDirectory.appendingPathComponent(descriptor.id, isDirectory: true)
+                relativePath = descriptor.id
+            }
+
+            do {
+                if fileManager.fileExists(atPath: destination.path) {
+                    try fileManager.removeItem(at: destination)
+                }
+                if !isSingleFile {
+                    try fileManager.createDirectory(at: destination, withIntermediateDirectories: true)
+                }
+            } catch {
+                DispatchQueue.main.async { completion(.failure(ModelManagerError.copyFailed)) }
+                return nil
+            }
+
+            let context = DownloadContext(descriptor: descriptor,
+                                          components: components,
+                                          destinationURL: destination,
+                                          relativePath: relativePath,
+                                          progress: progress,
+                                          completion: completion)
+            if startComponentDownload(context: context) {
+                return DownloadHandle(descriptorID: descriptor.id)
+            } else {
+                DispatchQueue.main.async { completion(.failure(ModelManagerError.copyFailed)) }
+                return nil
+            }
         }
     }
 
@@ -227,11 +304,14 @@ final class ModelManager: NSObject {
 
     // MARK: - Private helpers
 
-    private func cancelDownload(_ identifier: Int) {
+    private func cancelDownload(_ descriptorID: String) {
         queue.async {
-            guard let context = self.activeDownloads.removeValue(forKey: identifier) else { return }
+            guard let entry = self.activeDownloads.first(where: { $0.value.descriptor.id == descriptorID }) else { return }
+            let taskIdentifier = entry.key
+            let context = entry.value
+            self.activeDownloads.removeValue(forKey: taskIdentifier)
             self.session.getAllTasks { tasks in
-                tasks.first { $0.taskIdentifier == identifier }?.cancel()
+                tasks.first { $0.taskIdentifier == taskIdentifier }?.cancel()
             }
             DispatchQueue.main.async {
                 context.completion(.failure(NSError(domain: "com.mjvoice.model", code: -999, userInfo: [NSLocalizedDescriptionKey: "Download cancelled"])))
@@ -239,8 +319,34 @@ final class ModelManager: NSObject {
         }
     }
 
-    private func handleCompletion(for identifier: Int, result: Result<URL, Error>) {
-        guard let context = queue.sync(execute: { activeDownloads.removeValue(forKey: identifier) }) else { return }
+    @discardableResult
+    private func startComponentDownload(context: DownloadContext) -> Bool {
+        guard context.currentIndex < context.components.count else { return false }
+        let component = context.components[context.currentIndex]
+        context.currentBytesWritten = 0
+        context.currentBytesExpected = 0
+        let task = session.downloadTask(with: component.downloadURL)
+        activeDownloads[task.taskIdentifier] = context
+        task.resume()
+        return true
+    }
+
+    private func updateProgress(for context: DownloadContext) {
+        let completed = Double(context.currentIndex)
+        let total = Double(context.totalComponentCount)
+        let componentProgress: Double
+        if context.currentBytesExpected > 0 {
+            componentProgress = Double(context.currentBytesWritten) / Double(context.currentBytesExpected)
+        } else {
+            componentProgress = 0
+        }
+        let overall = total == 0 ? 0 : min(1.0, (completed + componentProgress) / total)
+        DispatchQueue.main.async {
+            context.progress(overall)
+        }
+    }
+
+    private func finalize(context: DownloadContext, result: Result<URL, Error>) {
         DispatchQueue.main.async {
             context.completion(result)
         }
@@ -287,40 +393,92 @@ final class ModelManager: NSObject {
         case .rnnoise: return "rnnoise"
         }
     }
-}
 
-extension ModelManager: URLSessionDownloadDelegate {
-    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
-        guard let context = queue.sync(execute: { activeDownloads[downloadTask.taskIdentifier] }) else { return }
-        let destination = modelsDirectory.appendingPathComponent(context.descriptor.expectedFilename)
+    @discardableResult
+    private func installBundledNoiseIfAvailable(for descriptor: ModelDescriptor) -> URL? {
+        guard let bundleInfo = bundledNoiseResources[descriptor.id],
+              let resourceURL = Bundle.main.url(forResource: bundleInfo.name,
+                                                withExtension: bundleInfo.ext,
+                                                subdirectory: bundleInfo.subdirectory) else {
+            return nil
+        }
+        let destination = modelsDirectory.appendingPathComponent(descriptor.expectedFilename)
         do {
             if fileManager.fileExists(atPath: destination.path) {
                 try fileManager.removeItem(at: destination)
             }
-            try fileManager.moveItem(at: location, to: destination)
-            let record = InstalledModelRecord(descriptor: context.descriptor, relativePath: context.descriptor.expectedFilename, installedAt: Date(), isUserProvided: false)
+            try fileManager.copyItem(at: resourceURL, to: destination)
+            let record = InstalledModelRecord(descriptor: descriptor,
+                                              relativePath: descriptor.expectedFilename,
+                                              installedAt: Date(),
+                                              isUserProvided: false)
+            queue.sync {
+                installedRecords[descriptor.id] = record
+                persistMetadata()
+            }
+            return destination
+        } catch {
+            NSLog("[ModelManager] Failed to install bundled noise model: \(error)")
+            return nil
+        }
+    }
+}
+
+extension ModelManager: URLSessionDownloadDelegate {
+    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
+        guard let context = queue.sync(execute: { activeDownloads.removeValue(forKey: downloadTask.taskIdentifier) }) else { return }
+        let component = context.components[context.currentIndex]
+        let targetURL: URL
+        if context.totalComponentCount == 1 && context.descriptor.components == nil {
+            targetURL = context.destinationURL
+        } else {
+            targetURL = context.destinationURL.appendingPathComponent(component.filename)
+        }
+
+        do {
+            if fileManager.fileExists(atPath: targetURL.path) {
+                try fileManager.removeItem(at: targetURL)
+            }
+            try fileManager.moveItem(at: location, to: targetURL)
+        } catch {
+            finalize(context: context, result: .failure(ModelManagerError.copyFailed))
+            return
+        }
+
+        context.currentIndex += 1
+        updateProgress(for: context)
+
+        if context.currentIndex >= context.totalComponentCount {
+            let record = InstalledModelRecord(descriptor: context.descriptor,
+                                              relativePath: context.relativePath,
+                                              installedAt: Date(),
+                                              isUserProvided: false)
             queue.sync {
                 installedRecords[context.descriptor.id] = record
                 persistMetadata()
             }
-            handleCompletion(for: downloadTask.taskIdentifier, result: .success(destination))
-        } catch {
-            handleCompletion(for: downloadTask.taskIdentifier, result: .failure(ModelManagerError.copyFailed))
+            DispatchQueue.main.async { context.progress(1.0) }
+            finalize(context: context, result: .success(context.destinationURL))
+        } else {
+            queue.async {
+                _ = self.startComponentDownload(context: context)
+            }
         }
     }
 
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         if let error {
-            handleCompletion(for: task.taskIdentifier, result: .failure(error))
+            if let context = queue.sync(execute: { activeDownloads.removeValue(forKey: task.taskIdentifier) }) {
+                finalize(context: context, result: .failure(error))
+            }
         }
     }
 
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
         guard let context = queue.sync(execute: { activeDownloads[downloadTask.taskIdentifier] }) else { return }
-        let progress = totalBytesExpectedToWrite > 0 ? Double(totalBytesWritten) / Double(totalBytesExpectedToWrite) : 0
-        DispatchQueue.main.async {
-            context.progress(progress)
-        }
+        context.currentBytesWritten = totalBytesWritten
+        context.currentBytesExpected = totalBytesExpectedToWrite
+        updateProgress(for: context)
     }
 }
 
@@ -336,7 +494,7 @@ private enum ModelCatalog {
                     provider: "OpenAI",
                     version: "2025.01",
                     kind: .asr,
-                    downloadURL: URL(string: "https://cdn.mjvoice.app/models/whisper/ggml-whisper-tiny.bin")!,
+                    downloadURL: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin?download=1")!,
                     expectedFilename: "ggml-whisper-tiny.bin",
                     sizeMB: 75,
                     engineHint: "whisperkit",
@@ -349,7 +507,7 @@ private enum ModelCatalog {
                     provider: "OpenAI",
                     version: "2025.01",
                     kind: .asr,
-                    downloadURL: URL(string: "https://cdn.mjvoice.app/models/whisper/ggml-whisper-base.bin")!,
+                    downloadURL: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin?download=1")!,
                     expectedFilename: "ggml-whisper-base.bin",
                     sizeMB: 142,
                     engineHint: "whisperkit",
@@ -362,7 +520,7 @@ private enum ModelCatalog {
                     provider: "OpenAI",
                     version: "2025.01",
                     kind: .asr,
-                    downloadURL: URL(string: "https://cdn.mjvoice.app/models/whisper/ggml-whisper-small.bin")!,
+                    downloadURL: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin?download=1")!,
                     expectedFilename: "ggml-whisper-small.bin",
                     sizeMB: 465,
                     engineHint: "whisperkit",
@@ -372,46 +530,62 @@ private enum ModelCatalog {
         case .fluid:
             switch size {
             case .tiny:
+                let components = ModelCatalog.fluidComponents(repo: "Systran/faster-whisper-tiny")
                 return ModelDescriptor(
                     id: "fluid-light",
                     name: "Fluid Audio Light",
                     provider: "Fluid",
                     version: "2025.01",
                     kind: .asr,
-                    downloadURL: URL(string: "https://cdn.mjvoice.app/models/fluid/fluid-light-2025.onnx")!,
-                    expectedFilename: "fluid-light.onnx",
+                    downloadURL: components[0].downloadURL,
+                    expectedFilename: "fluid-light",
                     sizeMB: 120,
                     engineHint: "fluid",
-                    notes: "Optimized for low-latency multilingual dictation"
+                    notes: "Optimized for low-latency multilingual dictation",
+                    components: components
                 )
             case .base:
+                let components = ModelCatalog.fluidComponents(repo: "Systran/faster-whisper-base")
                 return ModelDescriptor(
                     id: "fluid-pro",
                     name: "Fluid Audio Pro",
                     provider: "Fluid",
                     version: "2025.01",
                     kind: .asr,
-                    downloadURL: URL(string: "https://cdn.mjvoice.app/models/fluid/fluid-pro-2025.onnx")!,
-                    expectedFilename: "fluid-pro.onnx",
+                    downloadURL: components[0].downloadURL,
+                    expectedFilename: "fluid-pro",
                     sizeMB: 320,
                     engineHint: "fluid",
-                    notes: "Balanced accuracy and latency"
+                    notes: "Balanced accuracy and latency",
+                    components: components
                 )
             case .small:
+                let components = ModelCatalog.fluidComponents(repo: "Systran/faster-whisper-small")
                 return ModelDescriptor(
                     id: "fluid-advanced",
                     name: "Fluid Audio Advanced",
                     provider: "Fluid",
                     version: "2025.01",
                     kind: .asr,
-                    downloadURL: URL(string: "https://cdn.mjvoice.app/models/fluid/fluid-advanced-2025.onnx")!,
-                    expectedFilename: "fluid-advanced.onnx",
+                    downloadURL: components[0].downloadURL,
+                    expectedFilename: "fluid-advanced",
                     sizeMB: 540,
                     engineHint: "fluid",
-                    notes: "Highest accuracy, more compute"
+                    notes: "Highest accuracy, more compute",
+                    components: components
                 )
             }
         }
+    }
+
+    private static func fluidComponents(repo: String) -> [ModelComponent] {
+        let base = "https://huggingface.co/\(repo)/resolve/main"
+        return [
+            ModelComponent(filename: "config.json", downloadURL: URL(string: "\(base)/config.json?download=1")!),
+            ModelComponent(filename: "model.bin", downloadURL: URL(string: "\(base)/model.bin?download=1")!),
+            ModelComponent(filename: "tokenizer.json", downloadURL: URL(string: "\(base)/tokenizer.json?download=1")!),
+            ModelComponent(filename: "vocabulary.txt", downloadURL: URL(string: "\(base)/vocabulary.txt?download=1")!)
+        ]
     }
 
     static func noiseDescriptor(for noise: NoiseModel) -> ModelDescriptor? {

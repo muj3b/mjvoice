@@ -7,10 +7,9 @@ final class FluidEngine: SpeechRecognitionEngine {
     private var sampleRate: Double = 16000
 
     func start(config: ASRConfig) async throws {
-        guard let modelPath = config.modelPath, FileManager.default.fileExists(atPath: modelPath) else {
-            throw SpeechRecognitionEngineError.modelNotAvailable
-        }
-        runtime = try FluidRuntime(modelPath: modelPath, engineHint: config.engineHint)
+        runtime = try FluidRuntime(modelPath: config.modelPath,
+                                   modelIdentifier: config.modelIdentifier,
+                                   engineHint: config.engineHint)
         audioSamples.removeAll(keepingCapacity: true)
         sampleRate = config.sampleRate
     }
@@ -88,20 +87,27 @@ private struct FluidRuntime {
     }
 
     private let runtime: RuntimeType
-    private let modelPath: String
+    private let modelPath: String?
+    private let modelIdentifier: String
 
-    init(modelPath: String, engineHint: String?) throws {
+    init(modelPath: String?, modelIdentifier: String, engineHint: String?) throws {
+        if let modelPath, !FileManager.default.fileExists(atPath: modelPath) {
+            throw SpeechRecognitionEngineError.modelNotAvailable
+        }
         self.modelPath = modelPath
+        self.modelIdentifier = modelIdentifier
         if let runtimeFromEnv = ProcessInfo.processInfo.environment["MJVOICE_FLUID_RUNTIME"], !runtimeFromEnv.isEmpty {
             runtime = .executable(URL(fileURLWithPath: runtimeFromEnv))
             return
         }
 
-        let modelDirectory = URL(fileURLWithPath: modelPath).deletingLastPathComponent()
-        let bundled = modelDirectory.appendingPathComponent("fluid-runner")
-        if FileManager.default.isExecutableFile(atPath: bundled.path) {
-            runtime = .executable(bundled)
-            return
+        if let modelPath {
+            let modelDirectory = URL(fileURLWithPath: modelPath).deletingLastPathComponent()
+            let bundled = modelDirectory.appendingPathComponent("fluid-runner")
+            if FileManager.default.isExecutableFile(atPath: bundled.path) {
+                runtime = .executable(bundled)
+                return
+            }
         }
 
         let supportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
@@ -124,7 +130,13 @@ private struct FluidRuntime {
     private func runExecutable(_ executableURL: URL, audioURL: URL) throws -> (text: String, segments: [String]) {
         let process = Process()
         process.executableURL = executableURL
-        process.arguments = ["--model", modelPath, "--audio", audioURL.path, "--format", "json"]
+        var arguments = ["--audio", audioURL.path, "--format", "json"]
+        if let modelPath {
+            arguments.append(contentsOf: ["--model-path", modelPath])
+        } else {
+            arguments.append(contentsOf: ["--model-id", resolvedModelIdentifier()])
+        }
+        process.arguments = arguments
         let output = Pipe()
         let errorPipe = Pipe()
         process.standardOutput = output
@@ -143,6 +155,18 @@ private struct FluidRuntime {
         }
         let fallback = String(data: data, encoding: .utf8) ?? ""
         return (fallback.trimmingCharacters(in: .whitespacesAndNewlines), [])
+    }
+    private func resolvedModelIdentifier() -> String {
+        switch modelIdentifier {
+        case "fluid-light":
+            return "Systran/faster-whisper-tiny"
+        case "fluid-pro":
+            return "Systran/faster-whisper-base"
+        case "fluid-advanced":
+            return "Systran/faster-whisper-small"
+        default:
+            return modelIdentifier
+        }
     }
 }
 

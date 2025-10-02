@@ -3,6 +3,11 @@ import SwiftUI
 
 final class NotesWindow: NSWindow {
     private let textView = NSTextView()
+    static let shared: NotesWindow = {
+        let window = NotesWindow()
+        window.isReleasedWhenClosed = false
+        return window
+    }()
 
     init() {
         super.init(contentRect: NSRect(x: 0, y: 0, width: 600, height: 400),

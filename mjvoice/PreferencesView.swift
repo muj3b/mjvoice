@@ -12,6 +12,8 @@ struct PreferencesView: View {
     @State private var installedNoise: [InstalledModelRecord] = []
     @State private var alertMessage: String?
     @State private var showAlert = false
+    @State private var isInstallingFluidRuntime = false
+    @State private var fluidInstallMessage: String?
 
     private let modelManager = ModelManager.shared
 
@@ -122,6 +124,20 @@ struct PreferencesView: View {
                 Button("Add Custom ASR Model…") {
                     importCustomModel(kind: .asr)
                 }
+                Divider()
+                VStack(alignment: .leading, spacing: 4) {
+                    Button {
+                        installFluidRuntime()
+                    } label: {
+                        Label("Install Fluid Runtime…", systemImage: "shippingbox")
+                    }
+                    .disabled(isInstallingFluidRuntime)
+                    if let status = fluidInstallMessage {
+                        Text(status)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
                 if !installedASR.isEmpty {
                     ForEach(installedASR, id: \.descriptor.id) { record in
                         ModelRow(record: record, onReveal: revealModel, onDelete: deleteModel)
@@ -219,8 +235,10 @@ struct PreferencesView: View {
             case .success(let url):
                 alert("Model downloaded to \(url.lastPathComponent)")
                 refreshModels()
+                EventLogStore.shared.record(type: .modelDownload, message: "ASR model ready: \(url.lastPathComponent)")
             case .failure(let error):
                 alert(error.localizedDescription)
+                EventLogStore.shared.record(type: .modelDownloadFailed, message: "ASR download failed: \(error.localizedDescription)")
             }
         }
     }
@@ -237,8 +255,36 @@ struct PreferencesView: View {
             case .success(let url):
                 alert("Noise model saved to \(url.lastPathComponent)")
                 refreshModels()
+                EventLogStore.shared.record(type: .modelDownload, message: "Noise model ready: \(url.lastPathComponent)")
             case .failure(let error):
                 alert(error.localizedDescription)
+                EventLogStore.shared.record(type: .modelDownloadFailed, message: "Noise download failed: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    private func installFluidRuntime() {
+        guard !isInstallingFluidRuntime else { return }
+        isInstallingFluidRuntime = true
+        fluidInstallMessage = "Preparing installer…"
+        Task {
+            do {
+                let location = try await FluidRuntimeInstaller.shared.install { message in
+                    Task { @MainActor in
+                        self.fluidInstallMessage = message
+                    }
+                }
+                await MainActor.run {
+                    self.fluidInstallMessage = "Installed at \(location.path)"
+                    self.alert("Fluid runtime installed successfully.")
+                    EventLogStore.shared.record(type: .modelDownload, message: "Fluid runtime installed at \(location.path)")
+                    self.isInstallingFluidRuntime = false
+                }
+            } catch {
+                await MainActor.run {
+                    self.isInstallingFluidRuntime = false
+                    self.alert("Fluid runtime install failed: \(error.localizedDescription)")
+                }
             }
         }
     }

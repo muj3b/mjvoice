@@ -19,7 +19,7 @@ final class AudioEngine: NSObject {
 
     private let vad = VAD()
     private let asr = ASRClient.shared
-    private var notesWindow: NotesWindow?
+    private let notesWindow = NotesWindow.shared
 
     override init() {
         super.init()
@@ -68,17 +68,16 @@ final class AudioEngine: NSObject {
             let formattedText = TextFormatter.shared.format(text: text, prefs: PreferencesStore.shared.current)
             let mode = PreferencesStore.shared.current.defaultMode
             if mode == .notes {
-                if self.notesWindow == nil {
-                    self.notesWindow = NotesWindow()
-                }
-                self.notesWindow?.makeKeyAndOrderFront(nil)
-                self.notesWindow?.append(text: formattedText)
+                self.notesWindow.makeKeyAndOrderFront(nil)
+                self.notesWindow.append(text: formattedText)
                 Task { @MainActor in
                     UsageStore.shared.logTranscription(text: formattedText,
                                                        destination: .notes,
                                                        appBundleID: nil,
                                                        startedAt: start,
                                                        endedAt: Date())
+                    let wordCount = formattedText.split { $0.isWhitespace || $0.isNewline }.count
+                    EventLogStore.shared.record(type: .noteCaptured, message: "Captured note (\(wordCount) words)")
                 }
             } else {
                 if !formattedText.isEmpty {
