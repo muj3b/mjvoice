@@ -15,6 +15,8 @@ targets:
       - path: Shared/Utilities/BatteryThermalMonitor.swift
       - path: Shared/Utilities/Logger.swift
       - path: Shared/Utilities/PerformanceMetrics.swift
+      - path: Shared/Utilities/ModelManager.swift
+      - path: Shared/Utilities/UsageStore.swift
       - path: Shared/Utilities/TextFormatter.swift
       - path: Shared/Utilities/XPCConnectionFactory.swift
       - path: Shared/XPCProtocols

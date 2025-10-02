@@ -38,8 +38,12 @@ echo "App built at $APP_PATH"
 echo "Creating DMG..."
 # Create DMG directory
 DMG_DIR="$BUILD_DIR/dmg"
+rm -rf "$DMG_DIR"
 mkdir -p "$DMG_DIR"
 cp -r "$APP_PATH" "$DMG_DIR/"
+
+# Ensure fresh output
+rm -f "$BUILD_DIR/$DMG_NAME"
 
 # Create background image (placeholder - replace with actual image)
 # Use a simple background; in production, create a proper PNG

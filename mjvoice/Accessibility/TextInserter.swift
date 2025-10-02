@@ -1,41 +1,55 @@
 import AppKit
 
 final class TextInserter {
+    enum Outcome {
+        case inserted(bundleID: String?)
+        case clipboard
+        case notes
+    }
+
     static let shared = TextInserter()
     private init() {}
 
-    func insert(text: String) {
-        guard !SecureInputMonitor.shared.isSecureInputOn else { return }
-        if insertViaAX(text) { return }
-        if pasteboardFallback(text) { return }
-        _ = synthesizeTyping(text)
+    @discardableResult
+    func insert(text: String) -> Outcome {
+        guard !SecureInputMonitor.shared.isSecureInputOn else {
+            copyToClipboard(text)
+            notifyClipboardFallback()
+            return .clipboard
+        }
+
+        if let focus = currentFocus() {
+            if insertViaAX(text, target: focus.element) {
+                return .inserted(bundleID: focus.bundleID)
+            }
+            if pasteboardFallback(text) {
+                return .inserted(bundleID: focus.bundleID)
+            }
+        }
+
+        copyToClipboard(text)
+        notifyClipboardFallback()
+        return .clipboard
     }
 
-    func insert(text: String, prefs: UserPreferences) {
+    @discardableResult
+    func insert(text: String, prefs: UserPreferences) -> Outcome {
         let appBundleId = getCurrentAppBundleId()
         let formatted = TextFormatter.shared.format(text: text, prefs: prefs, appBundleId: appBundleId)
-        insert(text: formatted)
+        return insert(text: formatted)
     }
 
-    private func insertViaAX(_ text: String) -> Bool {
+    private func insertViaAX(_ text: String, target: AXUIElement) -> Bool {
         guard AXIsProcessTrusted() else { return false }
-        let systemWide = AXUIElementCreateSystemWide()
-        var focused: CFTypeRef?
-        let res = AXUIElementCopyAttributeValue(systemWide, kAXFocusedUIElementAttribute as CFString, &focused)
-        guard res == .success, let focusedElement = focused else { return false }
-        let target = unsafeBitCast(focusedElement, to: AXUIElement.self)
 
-        // Try to get current value and selection range
         var selectedRange: CFTypeRef?
         let hasRange = AXUIElementCopyAttributeValue(target, kAXSelectedTextRangeAttribute as CFString, &selectedRange) == .success
-        var newString: CFString = text as CFString
+        let newString: CFString = text as CFString
         if hasRange {
-            // Replace selected range by setting attributed text is not always supported; try kAXSelectedTextAttribute
             if AXUIElementSetAttributeValue(target, kAXSelectedTextAttribute as CFString, newString) == .success {
                 return true
             }
         }
-        // If cannot set selected text, try setting value directly for simple text fields
         if AXUIElementSetAttributeValue(target, kAXValueAttribute as CFString, newString) == .success {
             return true
         }
@@ -49,7 +63,6 @@ final class TextInserter {
         pb.setString(text, forType: .string)
         let success = synthesizeCmdV()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            // restore
             pb.clearContents()
             if let items = existing { pb.writeObjects(items) }
         }
@@ -58,7 +71,7 @@ final class TextInserter {
 
     private func synthesizeCmdV() -> Bool {
         let src = CGEventSource(stateID: .hidSystemState)
-        let keyVDown = CGEvent(keyboardEventSource: src, virtualKey: 9, keyDown: true) // v
+        let keyVDown = CGEvent(keyboardEventSource: src, virtualKey: 9, keyDown: true)
         keyVDown?.flags = .maskCommand
         let keyVUp = CGEvent(keyboardEventSource: src, virtualKey: 9, keyDown: false)
         keyVUp?.flags = .maskCommand
@@ -67,25 +80,32 @@ final class TextInserter {
         return true
     }
 
-    private func synthesizeTyping(_ text: String) -> Bool {
-        for scalar in text.unicodeScalars {
-            if let ev = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: true) {
-                ev.keyboardSetUnicodeString(stringLength: 1, unicodeString: [UInt16(scalar.value)])
-                ev.post(tap: .cghidEventTap)
-            }
-        }
-        return true
-    }
-    private func getCurrentAppBundleId() -> String? {
+    private func currentFocus() -> (element: AXUIElement, bundleID: String?)? {
         let systemWide = AXUIElementCreateSystemWide()
         var focused: CFTypeRef?
         let res = AXUIElementCopyAttributeValue(systemWide, kAXFocusedUIElementAttribute as CFString, &focused)
         guard res == .success, let focusedElement = focused else { return nil }
         let target = unsafeBitCast(focusedElement, to: AXUIElement.self)
-
         var pid: pid_t = 0
         AXUIElementGetPid(target, &pid)
-        let app = NSRunningApplication(processIdentifier: pid)
-        return app?.bundleIdentifier
+        let bundleID = NSRunningApplication(processIdentifier: pid)?.bundleIdentifier
+        return (target, bundleID)
+    }
+
+    private func getCurrentAppBundleId() -> String? {
+        currentFocus()?.bundleID
+    }
+
+    private func copyToClipboard(_ text: String) {
+        let pb = NSPasteboard.general
+        pb.clearContents()
+        pb.setString(text, forType: .string)
+    }
+
+    private func notifyClipboardFallback() {
+        let notification = NSUserNotification()
+        notification.title = "Dictation copied to clipboard"
+        notification.informativeText = "mjvoice saved your transcript because no editable field was focused."
+        NSUserNotificationCenter.default.deliver(notification)
     }
 }

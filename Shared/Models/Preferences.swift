@@ -60,6 +60,8 @@ public struct UserPreferences: Codable {
     public var customVocab: [String]
     public var perAppPresets: [String: AppPreset]
     public var hasCompletedOnboarding: Bool
+    public var selectedASRModelID: String?
+    public var selectedNoiseModelID: String?
 }
 
 public final class PreferencesStore {
@@ -83,7 +85,7 @@ public final class PreferencesStore {
         } else {
             self.current = UserPreferences(
                 version: "1.0",
-                hotkey: Hotkey(key: "Space", modifiers: ["command", "option"]),
+                hotkey: Hotkey(key: "fn", modifiers: []),
                 micSource: "Built-in Microphone",
                 defaultMode: .streaming,
                 pttMode: .pressHold,
@@ -103,7 +105,9 @@ public final class PreferencesStore {
                     "com.apple.mail": AppPreset(tone: .professional, mode: .instant, grammarPrompt: "Make it professional and polite for email communication."),
                     "com.tinyspeck.slackmacgap": AppPreset(tone: .friendly, mode: .streaming, grammarPrompt: "Keep it casual and conversational for chat.")
                 ],
-                hasCompletedOnboarding: false
+                hasCompletedOnboarding: false,
+                selectedASRModelID: nil,
+                selectedNoiseModelID: nil
             )
             persist()
         }

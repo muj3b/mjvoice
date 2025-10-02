@@ -1,26 +1,27 @@
 import Foundation
 import WhisperKit
 
-// Actual WhisperKit implementation
-final class WhisperEngine {
+final class WhisperEngine: SpeechRecognitionEngine {
     private var started = false
     private var audioData = Data()
-    private var config: ASRConfig?
     private var whisperKit: WhisperKit?
 
-    func start(config: ASRConfig) {
-        self.config = config
+    func start(config: ASRConfig) async throws {
         started = true
         audioData.removeAll(keepingCapacity: true)
 
-        // Initialize WhisperKit with model
-        Task {
-            do {
-                let model = config.modelSize
-                self.whisperKit = try await WhisperKit(model: model)
-            } catch {
-                NSLog("[WhisperEngine] Failed to load model: \(error)")
-            }
+        if let modelPath = config.modelPath {
+            let folderURL = URL(fileURLWithPath: modelPath).deletingLastPathComponent()
+            let fileName = URL(fileURLWithPath: modelPath).lastPathComponent
+            let configuration = WhisperKitConfig(model: fileName,
+                                                 modelFolder: folderURL,
+                                                 download: false,
+                                                 load: true)
+            whisperKit = try await WhisperKit(configuration)
+        } else {
+            let identifier = config.modelIdentifier
+            let mapped = identifier.split(separator: "-").last.map(String.init) ?? config.modelSize
+            whisperKit = try await WhisperKit(model: mapped)
         }
     }
 
@@ -30,13 +31,15 @@ final class WhisperEngine {
     }
 
     func finish() async -> (String, [String]) {
-        defer { started = false; audioData.removeAll() }
+        defer {
+            started = false
+            audioData.removeAll(keepingCapacity: false)
+        }
 
         guard let whisperKit else {
             return ("", [])
         }
 
-        // Convert audio data to float array
         let floatArray = audioData.withUnsafeBytes { ptr in
             Array(ptr.bindMemory(to: Float.self))
         }

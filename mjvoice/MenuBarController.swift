@@ -5,8 +5,10 @@ final class MenuBarController {
     let menu: NSMenu = NSMenu()
 
     private var isPaused: Bool = false
+    private let openDashboardHandler: () -> Void
 
-    init() {
+    init(openDashboard: @escaping () -> Void) {
+        self.openDashboardHandler = openDashboard
         rebuildMenu()
     }
 
@@ -23,6 +25,11 @@ final class MenuBarController {
         menu.addItem(offlineItem)
 
         menu.addItem(NSMenuItem.separator())
+        let dashboardItem = NSMenuItem(title: "Open Dashboard", action: #selector(openDashboard), keyEquivalent: "d")
+        dashboardItem.keyEquivalentModifierMask = [.command]
+        dashboardItem.target = self
+        menu.addItem(dashboardItem)
+
         let prefsItem = NSMenuItem(title: "Preferences…", action: #selector(openPreferences), keyEquivalent: ",")
         prefsItem.target = self
         menu.addItem(prefsItem)
@@ -46,7 +53,11 @@ final class MenuBarController {
     }
 
     @objc private func openPreferences() {
-        NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
+        PreferencesWindowController.shared.show()
+    }
+
+    @objc private func openDashboard() {
+        openDashboardHandler()
     }
 
     @objc private func quit() {

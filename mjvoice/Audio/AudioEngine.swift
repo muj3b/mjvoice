@@ -15,6 +15,7 @@ final class AudioEngine: NSObject {
     private var running = false
     var isRunning: Bool { running }
     private var isPausedDueToSecureInput = false
+    private var sessionStart: Date?
 
     private let vad = VAD()
     private let asr = ASRClient.shared
@@ -29,6 +30,7 @@ final class AudioEngine: NSObject {
         guard !running else { return }
         guard !SecureInputMonitor.shared.isSecureInputOn else { return }
         running = true
+        sessionStart = Date()
 
         let input = engine.inputNode
         let inputFormat = input.inputFormat(forBus: converterBus)
@@ -60,6 +62,8 @@ final class AudioEngine: NSObject {
         engine.inputNode.removeTap(onBus: converterBus)
         engine.stop()
         NotificationCenter.default.post(name: .hudStateChanged, object: MicHUDView.State.thinking)
+        let start = sessionStart
+        sessionStart = nil
         asr.endStream { text in
             let formattedText = TextFormatter.shared.format(text: text, prefs: PreferencesStore.shared.current)
             let mode = PreferencesStore.shared.current.defaultMode
@@ -69,9 +73,36 @@ final class AudioEngine: NSObject {
                 }
                 self.notesWindow?.makeKeyAndOrderFront(nil)
                 self.notesWindow?.append(text: formattedText)
+                Task { @MainActor in
+                    UsageStore.shared.logTranscription(text: formattedText,
+                                                       destination: .notes,
+                                                       appBundleID: nil,
+                                                       startedAt: start,
+                                                       endedAt: Date())
+                }
             } else {
                 if !formattedText.isEmpty {
-                    TextInserter.shared.insert(text: formattedText, prefs: PreferencesStore.shared.current)
+                    let outcome = TextInserter.shared.insert(text: formattedText, prefs: PreferencesStore.shared.current)
+                    let destination: TranscriptionRecord.Destination
+                    var bundleID: String?
+                    switch outcome {
+                    case .inserted(let bundle):
+                        destination = .insertion
+                        bundleID = bundle
+                    case .clipboard:
+                        destination = .clipboard
+                        bundleID = nil
+                    case .notes:
+                        destination = .notes
+                        bundleID = nil
+                    }
+                    Task { @MainActor in
+                        UsageStore.shared.logTranscription(text: formattedText,
+                                                           destination: destination,
+                                                           appBundleID: bundleID,
+                                                           startedAt: start,
+                                                           endedAt: Date())
+                    }
                 }
             }
             NotificationCenter.default.post(name: .hudStateChanged, object: MicHUDView.State.idle)

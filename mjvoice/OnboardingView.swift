@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct OnboardingView: View {
     @State private var currentStep = 0
@@ -123,7 +124,7 @@ struct OnboardingView: View {
                         .padding(.horizontal)
                     }
 
-                    if currentStep == 3 { // Download models step
+                    if currentStep == 4 { // Download models step
                         VStack(spacing: 16) {
                             if modelDownloaded {
                                 HStack {
@@ -198,23 +199,54 @@ struct OnboardingView: View {
     }
 
     private func downloadModel() {
+        guard !isDownloadingModel else { return }
         isDownloadingModel = true
         downloadProgress = 0.0
 
-        // Simulate download
-        Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
-            downloadProgress += 0.01
-            if downloadProgress >= 1.0 {
-                timer.invalidate()
-                isDownloadingModel = false
-                modelDownloaded = true
+        let prefs = PreferencesStore.shared.current
+        ModelManager.shared.downloadDefaultModel(for: prefs.asrModel, size: prefs.modelSize) { progress in
+            DispatchQueue.main.async {
+                self.downloadProgress = progress * 0.5
+            }
+        } completion: { result in
+            DispatchQueue.main.async {
+                self.isDownloadingModel = false
+                switch result {
+                case .success:
+                    self.downloadNoiseModelIfNeeded()
+                case .failure(let error):
+                    self.modelDownloaded = false
+                    NSApp.presentError(error)
+                }
+            }
+        }
+    }
+
+    private func downloadNoiseModelIfNeeded() {
+        let prefs = PreferencesStore.shared.current
+        ModelManager.shared.downloadDefaultNoiseModel(prefs.noiseModel) { progress in
+            DispatchQueue.main.async {
+                self.downloadProgress = 0.5 + progress / 2
+            }
+        } completion: { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success:
+                    self.modelDownloaded = true
+                case .failure(let error):
+                    NSApp.presentError(error)
+                }
             }
         }
     }
 
     private func completeOnboarding() {
         PreferencesStore.shared.update { $0.hasCompletedOnboarding = true }
-        NSApp.keyWindow?.close()
+        if let delegate = NSApp.delegate as? AppDelegate {
+            delegate.dismissOnboarding()
+        } else {
+            NSApp.keyWindow?.close()
+        }
     }
 }
 

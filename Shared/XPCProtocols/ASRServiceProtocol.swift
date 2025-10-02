@@ -12,12 +12,30 @@ import Foundation
     public let modelSize: String
     public let language: String
     public let offlineOnly: Bool
+    public let modelIdentifier: String
+    public let modelPath: String?
+    public let engineHint: String?
+    public let noiseModelIdentifier: String
+    public let noiseModelPath: String?
 
-    public init(sampleRate: Double, modelSize: String, language: String, offlineOnly: Bool) {
+    public init(sampleRate: Double,
+                modelSize: String,
+                language: String,
+                offlineOnly: Bool,
+                modelIdentifier: String,
+                modelPath: String?,
+                engineHint: String?,
+                noiseModelIdentifier: String,
+                noiseModelPath: String?) {
         self.sampleRate = sampleRate
         self.modelSize = modelSize
         self.language = language
         self.offlineOnly = offlineOnly
+        self.modelIdentifier = modelIdentifier
+        self.modelPath = modelPath
+        self.engineHint = engineHint
+        self.noiseModelIdentifier = noiseModelIdentifier
+        self.noiseModelPath = noiseModelPath
     }
 
     public func encode(with coder: NSCoder) {
@@ -25,6 +43,11 @@ import Foundation
         coder.encode(modelSize, forKey: "modelSize")
         coder.encode(language, forKey: "language")
         coder.encode(offlineOnly, forKey: "offlineOnly")
+        coder.encode(modelIdentifier, forKey: "modelIdentifier")
+        coder.encode(modelPath, forKey: "modelPath")
+        coder.encode(engineHint, forKey: "engineHint")
+        coder.encode(noiseModelIdentifier, forKey: "noiseModelIdentifier")
+        coder.encode(noiseModelPath, forKey: "noiseModelPath")
     }
 
     public required convenience init?(coder: NSCoder) {
@@ -32,7 +55,12 @@ import Foundation
             sampleRate: coder.decodeDouble(forKey: "sampleRate"),
             modelSize: coder.decodeObject(of: NSString.self, forKey: "modelSize") as String? ?? "tiny",
             language: coder.decodeObject(of: NSString.self, forKey: "language") as String? ?? "en",
-            offlineOnly: coder.decodeBool(forKey: "offlineOnly")
+            offlineOnly: coder.decodeBool(forKey: "offlineOnly"),
+            modelIdentifier: coder.decodeObject(of: NSString.self, forKey: "modelIdentifier") as String? ?? "whisper-tiny",
+            modelPath: coder.decodeObject(of: NSString.self, forKey: "modelPath") as String?,
+            engineHint: coder.decodeObject(of: NSString.self, forKey: "engineHint") as String?,
+            noiseModelIdentifier: coder.decodeObject(of: NSString.self, forKey: "noiseModelIdentifier") as String? ?? "rnnoise",
+            noiseModelPath: coder.decodeObject(of: NSString.self, forKey: "noiseModelPath") as String?
         )
     }
 }

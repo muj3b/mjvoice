@@ -16,12 +16,16 @@ final class GlobalHotkeyManager {
     private var eventHandler: EventHandlerRef?
     private(set) var mode: PTTMode = .pressHold
     private var isLatched: Bool = false
+    private var fnGlobalMonitor: Any?
+    private var fnLocalMonitor: Any?
+    private var fnPressed = false
 
     func configure(mode: PTTMode) {
         self.mode = mode
     }
 
     class func canRegister(hotkey: Hotkey) -> Bool {
+        if hotkey.key.lowercased() == "fn" { return true }
         let mods = Self.modifiersFrom(hotkey.modifiers)
         let keyCode = Self.keyCodeFrom(name: hotkey.key)
         var hotKeyRef: EventHotKeyRef?
@@ -39,6 +43,11 @@ final class GlobalHotkeyManager {
 
     func registerDefaultHotkey() {
         unregister()
+        let prefs = PreferencesStore.shared.current
+        if prefs.hotkey.key.lowercased() == "fn" {
+            registerFnMonitor()
+            return
+        }
         var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
         var eventType2 = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyReleased))
         InstallEventHandler(GetApplicationEventTarget(), { (_, event, _) -> OSStatus in
@@ -50,8 +59,6 @@ final class GlobalHotkeyManager {
             }
             return noErr
         }, 2, [eventType, eventType2], nil, &eventHandler)
-
-        let prefs = PreferencesStore.shared.current
         let modifiers = Self.modifiersFrom(prefs.hotkey.modifiers)
         let keyCode = Self.keyCodeFrom(name: prefs.hotkey.key)
 
@@ -64,6 +71,9 @@ final class GlobalHotkeyManager {
         if let eventHandler { RemoveEventHandler(eventHandler) }
         hotKeyRef = nil
         eventHandler = nil
+        if let monitor = fnGlobalMonitor { NSEvent.removeMonitor(monitor); fnGlobalMonitor = nil }
+        if let monitor = fnLocalMonitor { NSEvent.removeMonitor(monitor); fnLocalMonitor = nil }
+        fnPressed = false
     }
 
     private func handlePressed() {
@@ -93,6 +103,7 @@ final class GlobalHotkeyManager {
             case "option": mask |= UInt32(optionKey)
             case "control": mask |= UInt32(controlKey)
             case "shift": mask |= UInt32(shiftKey)
+            case "fn": break
             default: break
             }
         }
@@ -104,6 +115,28 @@ final class GlobalHotkeyManager {
         case "space": return UInt32(kVK_Space)
         case "a": return UInt32(kVK_ANSI_A)
         default: return UInt32(kVK_Space)
+        }
+    }
+
+    private func registerFnMonitor() {
+        fnLocalMonitor = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
+            self?.handleFnEvent(event)
+            return event
+        }
+        fnGlobalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged, handler: { [weak self] event in
+            self?.handleFnEvent(event)
+        })
+    }
+
+    private func handleFnEvent(_ event: NSEvent) {
+        guard event.keyCode == 63 else { return }
+        let isDown = event.modifierFlags.contains(.function)
+        if isDown && !fnPressed {
+            fnPressed = true
+            handlePressed()
+        } else if !isDown && fnPressed {
+            fnPressed = false
+            handleReleased()
         }
     }
 }

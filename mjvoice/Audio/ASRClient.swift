@@ -20,7 +20,18 @@ final class ASRClient {
 
     func startStream(sampleRate: Double, modelSize: String, language: String, offlineOnly: Bool, completion: @escaping (Bool) -> Void) {
         connect()
-        let cfg = ASRConfig(sampleRate: sampleRate, modelSize: modelSize, language: language, offlineOnly: offlineOnly)
+        let prefs = PreferencesStore.shared.current
+        let asrResolution = ModelManager.shared.resolveASRModel(preferences: prefs)
+        let noiseResolution = ModelManager.shared.resolveNoiseModel(preferences: prefs)
+        let cfg = ASRConfig(sampleRate: sampleRate,
+                            modelSize: modelSize,
+                            language: language,
+                            offlineOnly: offlineOnly,
+                            modelIdentifier: asrResolution.identifier,
+                            modelPath: asrResolution.url?.path,
+                            engineHint: asrResolution.descriptor?.engineHint,
+                            noiseModelIdentifier: noiseResolution.identifier,
+                            noiseModelPath: noiseResolution.url?.path)
         proxy?.startStream(with: cfg) { res in
             completion(res.ok)
         }

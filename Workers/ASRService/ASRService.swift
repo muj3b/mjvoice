@@ -4,7 +4,7 @@ import AppKit
 @objc(ASRService) final class ASRService: NSObject, NSXPCListenerDelegate {
     private let listener: NSXPCListener
     private var idleTimer: DispatchSourceTimer?
-    private var engine: WhisperEngine?
+    private var engine: SpeechRecognitionEngine?
 
     override init() {
         listener = NSXPCListener.service()
@@ -42,10 +42,18 @@ import AppKit
 
 extension ASRService: ASRServiceProtocol {
     func startStream(with config: ASRConfig, with reply: @escaping (ASRStartResult) -> Void) {
-        if engine == nil { engine = WhisperEngine() }
         resetIdleTimer()
-        engine?.start(config: config)
-        reply(ASRStartResult(ok: true, message: "started"))
+        Task {
+            do {
+                let engine = try selectEngine(for: config)
+                try await engine.start(config: config)
+                self.engine = engine
+                reply(ASRStartResult(ok: true, message: "started"))
+            } catch {
+                NSLog("[ASRService] Failed to start engine: \(error)")
+                reply(ASRStartResult(ok: false, message: error.localizedDescription))
+            }
+        }
     }
 
     func sendAudioChunk(_ data: Data, with reply: @escaping (Bool) -> Void) {
@@ -56,10 +64,19 @@ extension ASRService: ASRServiceProtocol {
 
     func endStream(with reply: @escaping (ASRFinalResult) -> Void) {
         resetIdleTimer()
+        let currentEngine = engine
         Task {
-            let (text, segments) = await self.engine?.finish() ?? ("", [])
+            let (text, segments) = await currentEngine?.finish() ?? ("", [])
             reply(ASRFinalResult(text: text, segments: segments))
         }
+    }
+
+    private func selectEngine(for config: ASRConfig) throws -> SpeechRecognitionEngine {
+        let hint = config.engineHint?.lowercased()
+        if hint == "fluid" || config.modelIdentifier.hasPrefix("fluid") {
+            return FluidEngine()
+        }
+        return WhisperEngine()
     }
 }
 
@@ -75,12 +92,30 @@ extension ASRService: ASRServiceProtocol {
     let modelSize: String
     let language: String
     let offlineOnly: Bool
+    let modelIdentifier: String
+    let modelPath: String?
+    let engineHint: String?
+    let noiseModelIdentifier: String
+    let noiseModelPath: String?
 
-    init(sampleRate: Double, modelSize: String, language: String, offlineOnly: Bool) {
+    init(sampleRate: Double,
+         modelSize: String,
+         language: String,
+         offlineOnly: Bool,
+         modelIdentifier: String,
+         modelPath: String?,
+         engineHint: String?,
+         noiseModelIdentifier: String,
+         noiseModelPath: String?) {
         self.sampleRate = sampleRate
         self.modelSize = modelSize
         self.language = language
         self.offlineOnly = offlineOnly
+        self.modelIdentifier = modelIdentifier
+        self.modelPath = modelPath
+        self.engineHint = engineHint
+        self.noiseModelIdentifier = noiseModelIdentifier
+        self.noiseModelPath = noiseModelPath
     }
 
     func encode(with coder: NSCoder) {
@@ -88,13 +123,23 @@ extension ASRService: ASRServiceProtocol {
         coder.encode(modelSize, forKey: "modelSize")
         coder.encode(language, forKey: "language")
         coder.encode(offlineOnly, forKey: "offlineOnly")
+        coder.encode(modelIdentifier, forKey: "modelIdentifier")
+        coder.encode(modelPath, forKey: "modelPath")
+        coder.encode(engineHint, forKey: "engineHint")
+        coder.encode(noiseModelIdentifier, forKey: "noiseModelIdentifier")
+        coder.encode(noiseModelPath, forKey: "noiseModelPath")
     }
 
     required convenience init?(coder: NSCoder) {
         self.init(sampleRate: coder.decodeDouble(forKey: "sampleRate"),
                   modelSize: coder.decodeObject(of: NSString.self, forKey: "modelSize") as String? ?? "tiny",
                   language: coder.decodeObject(of: NSString.self, forKey: "language") as String? ?? "en",
-                  offlineOnly: coder.decodeBool(forKey: "offlineOnly"))
+                  offlineOnly: coder.decodeBool(forKey: "offlineOnly"),
+                  modelIdentifier: coder.decodeObject(of: NSString.self, forKey: "modelIdentifier") as String? ?? "whisper-tiny",
+                  modelPath: coder.decodeObject(of: NSString.self, forKey: "modelPath") as String?,
+                  engineHint: coder.decodeObject(of: NSString.self, forKey: "engineHint") as String?,
+                  noiseModelIdentifier: coder.decodeObject(of: NSString.self, forKey: "noiseModelIdentifier") as String? ?? "rnnoise",
+                  noiseModelPath: coder.decodeObject(of: NSString.self, forKey: "noiseModelPath") as String?)
     }
 }
 
