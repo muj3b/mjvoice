@@ -27,7 +27,7 @@
 	<key>NSMainNibFile</key>
 	<string></string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>mjvoice needs microphone access to enable dictation.</string>
+	<string>Siri needs microphone access to respond to your voice.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>

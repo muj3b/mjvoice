@@ -85,7 +85,7 @@ public final class PreferencesStore {
         } else {
             self.current = UserPreferences(
                 version: "1.0",
-                hotkey: Hotkey(key: "fn", modifiers: []),
+                hotkey: Hotkey(key: "space", modifiers: ["command", "shift"]),
                 micSource: "Built-in Microphone",
                 defaultMode: .streaming,
                 pttMode: .pressHold,

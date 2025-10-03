@@ -24,7 +24,6 @@ final class DictationOverlayWindow: NSPanel {
         hostingController.view.wantsLayer = true
         hostingController.view.layer?.backgroundColor = NSColor.clear.cgColor
 
-        NotificationCenter.default.addObserver(self, selector: #selector(onAudioLevel(_:)), name: .audioLevelDidUpdate, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(onOverlayState(_:)), name: .hudStateChanged, object: nil)
     }
 
@@ -40,22 +39,22 @@ final class DictationOverlayWindow: NSPanel {
             orderFrontRegardless()
         }
         cancelHide()
-        viewModel.updateState(.listening)
+        viewModel.state = .listening
         scheduleSafeguard()
     }
 
     func hide() {
-        viewModel.updateState(.idle)
+        viewModel.state = .idle
         scheduleHide(after: 0.2)
     }
 
     func updateState(_ state: DictationOverlayState) {
         if state == .idle {
-            viewModel.updateState(.idle)
+            viewModel.state = .idle
             scheduleHide(after: 0.18)
             cancelSafeguard()
         } else {
-            viewModel.updateState(state)
+            viewModel.state = state
             cancelHide()
             ensureVisible()
             scheduleSafeguard()
@@ -70,13 +69,6 @@ final class DictationOverlayWindow: NSPanel {
         }
         if !isVisible {
             orderFrontRegardless()
-        }
-    }
-
-    @objc private func onAudioLevel(_ notification: Notification) {
-        guard let level = notification.object as? CGFloat else { return }
-        DispatchQueue.main.async { [weak self] in
-            self?.viewModel.handleAudioLevel(level)
         }
     }
 
@@ -106,7 +98,7 @@ final class DictationOverlayWindow: NSPanel {
         cancelSafeguard()
         let work = DispatchWorkItem { [weak self] in
             guard let self else { return }
-            self.viewModel.updateState(.idle)
+            self.viewModel.state = .idle
             self.scheduleHide(after: 0.1)
         }
         safeguardWorkItem = work
