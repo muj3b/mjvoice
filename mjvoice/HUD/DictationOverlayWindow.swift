@@ -40,22 +40,22 @@ final class DictationOverlayWindow: NSPanel {
             orderFrontRegardless()
         }
         cancelHide()
-        viewModel.state = .listening
+        viewModel.updateState(.listening)
         scheduleSafeguard()
     }
 
     func hide() {
-        viewModel.state = .idle
+        viewModel.updateState(.idle)
         scheduleHide(after: 0.2)
     }
 
     func updateState(_ state: DictationOverlayState) {
         if state == .idle {
-            viewModel.state = .idle
+            viewModel.updateState(.idle)
             scheduleHide(after: 0.18)
             cancelSafeguard()
         } else {
-            viewModel.state = state
+            viewModel.updateState(state)
             cancelHide()
             ensureVisible()
             scheduleSafeguard()
@@ -76,7 +76,7 @@ final class DictationOverlayWindow: NSPanel {
     @objc private func onAudioLevel(_ notification: Notification) {
         guard let level = notification.object as? CGFloat else { return }
         DispatchQueue.main.async { [weak self] in
-            self?.viewModel.audioLevel = level
+            self?.viewModel.handleAudioLevel(level)
         }
     }
 
@@ -106,7 +106,7 @@ final class DictationOverlayWindow: NSPanel {
         cancelSafeguard()
         let work = DispatchWorkItem { [weak self] in
             guard let self else { return }
-            self.viewModel.state = .idle
+            self.viewModel.updateState(.idle)
             self.scheduleHide(after: 0.1)
         }
         safeguardWorkItem = work
