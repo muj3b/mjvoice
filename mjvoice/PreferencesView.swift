@@ -13,200 +13,192 @@ struct PreferencesView: View {
     @State private var alertMessage: String?
     @State private var showAlert = false
     @State private var isInstallingFluidRuntime = false
-    @State private var fluidInstallMessage: String?
+    @State private var fluidInstallStatus: String? = nil
 
     private let modelManager = ModelManager.shared
 
     var body: some View {
-        Form {
-            Section(header: Text("General")) {
-                HStack {
-                    Text("Hotkey:")
-                    if recordingHotkey {
-                        HotkeyRecorder(onRecord: { newHotkey in
-                            recordingHotkey = false
-                            if let newHotkey = newHotkey {
-                                update { $0.hotkey = newHotkey }
-                                GlobalHotkeyManager.shared.registerDefaultHotkey()
-                                hotkeyError = nil
-                            } else {
-                                hotkeyError = "Invalid hotkey or already in use"
-                            }
-                        })
-                    } else {
-                        Text(displayHotkey(prefs.hotkey))
-                        Button("Change") {
-                            recordingHotkey = true
-                            hotkeyError = nil
-                        }
-                    }
-                }
-                if let error = hotkeyError {
-                    Text(error).foregroundColor(.red).font(.caption)
-                }
-                Toggle("Offline Mode", isOn: Binding(
-                    get: { prefs.offlineMode },
-                    set: { new in update { $0.offlineMode = new } }
-                ))
-                Picker("Default Mode", selection: Binding(
-                    get: { prefs.defaultMode },
-                    set: { new in update { $0.defaultMode = new } }
-                )) {
-                    Text("Streaming").tag(DictationMode.streaming)
-                    Text("Instant").tag(DictationMode.instant)
-                    Text("Notes").tag(DictationMode.notes)
-                }
-                Picker("PTT Mode", selection: Binding(
-                    get: { prefs.pttMode },
-                    set: { new in 
-                        update { $0.pttMode = new }
-                        GlobalHotkeyManager.shared.configure(mode: new)
-                    }
-                )) {
-                    Text("Press and Hold").tag(PTTMode.pressHold)
-                    Text("Latch").tag(PTTMode.latch)
-                    Text("Toggle").tag(PTTMode.toggle)
-                }
-                Picker("Model Size", selection: Binding(
-                    get: { prefs.modelSize },
-                    set: { new in update { $0.modelSize = new } }
-                )) {
-                    Text("Tiny").tag(ModelSize.tiny)
-                    Text("Base").tag(ModelSize.base)
-                    Text("Small").tag(ModelSize.small)
-                }
-                Picker("ASR Model", selection: Binding(
-                    get: { prefs.asrModel },
-                    set: { new in update { $0.asrModel = new } }
-                )) {
-                    Text("Whisper (OpenAI)").tag(ASRModel.whisper)
-                    Text("Fluid Audio").tag(ASRModel.fluid)
-                }
-                Picker("Noise Suppression", selection: Binding(
-                    get: { prefs.noiseModel },
-                    set: { new in update { $0.noiseModel = new } }
-                )) {
-                    Text("RNNoise (2024)").tag(NoiseModel.rnnoise)
-                    Text("dtln-rs (2025)").tag(NoiseModel.dtln_rs)
-                }
-                TextField("Language", text: Binding(
-                    get: { prefs.language },
-                    set: { new in update { $0.language = new } }
-                ))
-                Toggle("Auto Capitalize", isOn: Binding(
-                    get: { prefs.autoCapitalize },
-                    set: { new in update { $0.autoCapitalize = new } }
-                ))
-                Toggle("Remove Filler Words", isOn: Binding(
-                    get: { prefs.removeFiller },
-                    set: { new in update { $0.removeFiller = new } }
-                ))
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 28) {
+                header
+                generalCard
+                modelCard
+                aiCard
+                appearanceCard
             }
-            Section(header: Text("Models")) {
-                Picker("Active ASR Model", selection: Binding(
-                    get: { prefs.selectedASRModelID ?? modelIdentifierDefault(for: prefs) },
-                    set: { new in update { $0.selectedASRModelID = new } }
-                )) {
-                    Text(defaultModelDisplay(for: prefs)).tag(modelIdentifierDefault(for: prefs))
-                    ForEach(installedASR, id: \.descriptor.id) { record in
-                        Text("\(record.descriptor.name) — \(record.descriptor.provider)")
-                            .tag(record.descriptor.id)
-                    }
-                }
-                if isDownloadingASR {
-                    ProgressView(value: asrDownloadProgress, total: 1.0) {
-                        Text("Downloading ASR model…")
-                    }
-                }
-                Button("Download \(prefs.asrModel == .whisper ? "Whisper" : "Fluid") \(prefs.modelSize.rawValue.capitalized) Model") {
-                    startASRDownload()
-                }
-                Button("Add Custom ASR Model…") {
-                    importCustomModel(kind: .asr)
-                }
-                Divider()
-                VStack(alignment: .leading, spacing: 4) {
-                    Button {
-                        installFluidRuntime()
-                    } label: {
-                        Label("Install Fluid Runtime…", systemImage: "shippingbox")
-                    }
-                    .disabled(isInstallingFluidRuntime)
-                    if let status = fluidInstallMessage {
-                        Text(status)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                if !installedASR.isEmpty {
-                    ForEach(installedASR, id: \.descriptor.id) { record in
-                        ModelRow(record: record, onReveal: revealModel, onDelete: deleteModel)
-                    }
-                }
-                Divider()
-                Picker("Noise Suppression", selection: Binding(
-                    get: { prefs.selectedNoiseModelID ?? defaultNoiseIdentifier(for: prefs.noiseModel) },
-                    set: { new in update { $0.selectedNoiseModelID = new } }
-                )) {
-                    Text(defaultNoiseDisplay(for: prefs)).tag(defaultNoiseIdentifier(for: prefs.noiseModel))
-                    ForEach(installedNoise, id: \.descriptor.id) { record in
-                        Text("\(record.descriptor.name)").tag(record.descriptor.id)
-                    }
-                }
-                if isDownloadingNoise {
-                    ProgressView(value: noiseDownloadProgress, total: 1.0) {
-                        Text("Downloading noise model…")
-                    }
-                }
-                Button("Download \(prefs.noiseModel == .dtln_rs ? "dtln-rs" : "RNNoise") Model") {
-                    startNoiseDownload()
-                }
-                Button("Add Custom Noise Model…") {
-                    importCustomModel(kind: .noise)
-                }
-                if !installedNoise.isEmpty {
-                    ForEach(installedNoise, id: \.descriptor.id) { record in
-                        ModelRow(record: record, onReveal: revealModel, onDelete: deleteModel)
-                    }
-                }
-            }
-            Section(header: Text("AI Grammar")) {
-                Toggle("Enable AI Grammar Fixing", isOn: Binding(
-                    get: { prefs.enableAIGrammar },
-                    set: { new in update { $0.enableAIGrammar = new } }
-                ))
-                TextField("Default Grammar Prompt", text: Binding(
-                    get: { prefs.defaultGrammarPrompt },
-                    set: { new in update { $0.defaultGrammarPrompt = new } }
-                ))
-            }
-            Section(header: Text("Theme")) {
-                Picker("Theme", selection: Binding(
-                    get: { prefs.theme },
-                    set: { new in update { $0.theme = new } }
-                )) {
-                    Text("Auto").tag("auto")
-                    Text("Light Glass").tag("light")
-                    Text("Dark Glass").tag("dark")
-                }
-            }
+            .padding(32)
         }
-        .padding(16)
-        .background(.ultraThinMaterial)
-        .frame(width: 460)
+        .frame(minWidth: 560)
+        .background(LinearGradient(colors: [Color(nsColor: .windowBackgroundColor), Color(nsColor: .underPageBackgroundColor)], startPoint: .topLeading, endPoint: .bottomTrailing))
+        .alert(alertMessage ?? "", isPresented: $showAlert) { Button("OK", role: .cancel) { } }
         .onAppear(perform: refreshModels)
         .onReceive(NotificationCenter.default.publisher(for: ModelManager.modelsDidChangeNotification)) { _ in
             refreshModels()
         }
-        .alert(alertMessage ?? "", isPresented: $showAlert) {
-            Button("OK", role: .cancel) { }
+    }
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("mjvoice Preferences")
+                .font(.system(size: 22, weight: .semibold))
+            Text("Adjust dictation behaviour, engines, and output polishing.")
+                .font(.system(size: 13))
+                .foregroundStyle(Color.secondary)
         }
     }
 
+    private var generalCard: some View {
+        PreferenceCard(title: "General", symbol: "slider.horizontal.3") {
+            VStack(spacing: 18) {
+                hotkeyRow
+                ToggleRow(title: "Offline mode", subtitle: "Force on-device recognition for sensitive material.", isOn: Binding(
+                    get: { prefs.offlineMode },
+                    set: { new in update { $0.offlineMode = new } }
+                ))
+                PickerRow(title: "Default mode", selection: Binding(
+                    get: { prefs.defaultMode },
+                    set: { new in update { $0.defaultMode = new } }
+                ), items: dictationModeOptions)
+                PickerRow(title: "Hotkey style", selection: Binding(
+                    get: { prefs.pttMode },
+                    set: { new in
+                        update { $0.pttMode = new }
+                        GlobalHotkeyManager.shared.configure(mode: new)
+                    }
+                ), items: pttModeOptions)
+                TextFieldRow(title: "Language", text: Binding(
+                    get: { prefs.language },
+                    set: { new in update { $0.language = new } }
+                ))
+                ToggleRow(title: "Auto capitalize", isOn: Binding(
+                    get: { prefs.autoCapitalize },
+                    set: { new in update { $0.autoCapitalize = new } }
+                ))
+                ToggleRow(title: "Remove filler words", isOn: Binding(
+                    get: { prefs.removeFiller },
+                    set: { new in update { $0.removeFiller = new } }
+                ))
+            }
+        }
+    }
+
+    private var modelCard: some View {
+        PreferenceCard(title: "Speech models", symbol: "waveform") {
+            VStack(alignment: .leading, spacing: 20) {
+                PickerRow(title: "ASR engine", selection: Binding(
+                    get: { prefs.selectedASRModelID ?? modelIdentifierDefault(for: prefs) },
+                    set: { new in update { $0.selectedASRModelID = new } }
+                ), items: defaultAndInstalledASR())
+
+                if isDownloadingASR {
+                    ProgressView(value: asrDownloadProgress) { Text("Downloading ASR model…") }
+                }
+
+                ButtonRow(title: "Download \(prefs.asrModel == .whisper ? "Whisper" : "Fluid") \(prefs.modelSize.rawValue.capitalized) model") {
+                    startASRDownload()
+                }
+
+                ButtonRow(title: "Install Fluid runtime", subtitle: fluidInstallStatus) {
+                    installFluidRuntime()
+                }
+                .disabled(isInstallingFluidRuntime)
+
+                if !installedASR.isEmpty {
+                    ModelList(title: "Installed ASR models", records: installedASR, onReveal: revealModel, onDelete: deleteModel)
+                }
+
+                Divider().padding(.vertical, 4)
+
+                PickerRow(title: "Noise suppression", selection: Binding(
+                    get: { prefs.selectedNoiseModelID ?? defaultNoiseIdentifier(for: prefs.noiseModel) },
+                    set: { new in update { $0.selectedNoiseModelID = new } }
+                ), items: defaultAndInstalledNoise())
+
+                if isDownloadingNoise {
+                    ProgressView(value: noiseDownloadProgress) { Text("Downloading noise model…") }
+                }
+
+                ButtonRow(title: "Download \(prefs.noiseModel == .dtln_rs ? "dtln-rs" : "RNNoise") model") {
+                    startNoiseDownload()
+                }
+
+                if !installedNoise.isEmpty {
+                    ModelList(title: "Installed noise models", records: installedNoise, onReveal: revealModel, onDelete: deleteModel)
+                }
+            }
+        }
+    }
+
+    private var aiCard: some View {
+        PreferenceCard(title: "AI output", symbol: "sparkles") {
+            VStack(spacing: 16) {
+                ToggleRow(title: "Grammar fixer", subtitle: "Uses your prompt after each transcript to tidy phrasing.", isOn: Binding(
+                    get: { prefs.enableAIGrammar },
+                    set: { new in update { $0.enableAIGrammar = new } }
+                ))
+                TextFieldRow(title: "Prompt", text: Binding(
+                    get: { prefs.defaultGrammarPrompt },
+                    set: { new in update { $0.defaultGrammarPrompt = new } }
+                ))
+            }
+        }
+    }
+
+    private var appearanceCard: some View {
+        PreferenceCard(title: "Appearance", symbol: "paintpalette") {
+            PickerRow(title: "Theme", selection: Binding(
+                get: { prefs.theme },
+                set: { new in update { $0.theme = new } }
+            ), items: [("auto", "Auto"), ("light", "Light"), ("dark", "Dark")])
+        }
+    }
+
+    // MARK: - Rows
+
+    private var hotkeyRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Hotkey")
+                    .font(.system(size: 13, weight: .semibold))
+                Spacer()
+                if recordingHotkey {
+                    HotkeyRecorder(onRecord: { newHotkey in
+                        recordingHotkey = false
+                        if let newHotkey {
+                            update { $0.hotkey = newHotkey }
+                            GlobalHotkeyManager.shared.registerDefaultHotkey()
+                            hotkeyError = nil
+                        } else {
+                            hotkeyError = "Invalid hotkey or already in use"
+                        }
+                    })
+                } else {
+                    Text(displayHotkey(prefs.hotkey))
+                        .font(.system(size: 13, weight: .medium))
+                        .padding(.vertical, 6)
+                        .padding(.horizontal, 12)
+                        .background(Color.primary.opacity(0.06))
+                        .clipShape(Capsule())
+                    Button("Change") {
+                        recordingHotkey = true
+                        hotkeyError = nil
+                    }
+                }
+            }
+            if let error = hotkeyError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(Color.red)
+            }
+        }
+    }
+
+    // MARK: - Helpers
+
     private func update(_ mutate: (inout UserPreferences) -> Void) {
-        PreferencesStore.shared.update { pr in
-            mutate(&pr)
-            prefs = pr
+        PreferencesStore.shared.update { prefs in
+            mutate(&prefs)
+            self.prefs = prefs
         }
     }
 
@@ -266,53 +258,27 @@ struct PreferencesView: View {
     private func installFluidRuntime() {
         guard !isInstallingFluidRuntime else { return }
         isInstallingFluidRuntime = true
-        fluidInstallMessage = "Preparing installer…"
+        fluidInstallStatus = "Installing…"
         Task {
             do {
-                let location = try await FluidRuntimeInstaller.shared.install { message in
-                    Task { @MainActor in
-                        self.fluidInstallMessage = message
-                    }
-                }
+                let url = try await DictationRuntimeHelper.installFluidRuntime()
                 await MainActor.run {
-                    self.fluidInstallMessage = "Installed at \(location.path)"
-                    self.alert("Fluid runtime installed successfully.")
-                    EventLogStore.shared.record(type: .modelDownload, message: "Fluid runtime installed at \(location.path)")
-                    self.isInstallingFluidRuntime = false
+                    isInstallingFluidRuntime = false
+                    fluidInstallStatus = "Installed at \(url.path)"
+                    alert("Fluid runtime installed at \(url.path)")
                 }
             } catch {
                 await MainActor.run {
-                    self.isInstallingFluidRuntime = false
-                    self.alert("Fluid runtime install failed: \(error.localizedDescription)")
+                    isInstallingFluidRuntime = false
+                    fluidInstallStatus = ""
+                    alert("Fluid runtime install failed: \(error.localizedDescription)")
                 }
-            }
-        }
-    }
-
-    private func importCustomModel(kind: ModelKind) {
-        let panel = NSOpenPanel()
-        panel.canChooseDirectories = false
-        panel.allowsMultipleSelection = false
-        panel.canChooseFiles = true
-        panel.begin { response in
-            guard response == .OK, let url = panel.url else { return }
-            do {
-                let record = try modelManager.registerCustomModel(from: url, name: url.deletingPathExtension().lastPathComponent, kind: kind)
-                if kind == .asr {
-                    update { $0.selectedASRModelID = record.descriptor.id }
-                } else {
-                    update { $0.selectedNoiseModelID = record.descriptor.id }
-                }
-                refreshModels()
-            } catch {
-                alert("Failed to import model: \(error.localizedDescription)")
             }
         }
     }
 
     private func revealModel(_ record: InstalledModelRecord) {
-        let url = modelManager.location(for: record.descriptor.id)
-        if let url {
+        if let url = modelManager.location(for: record.descriptor.id) {
             NSWorkspace.shared.activateFileViewerSelecting([url])
         }
     }
@@ -331,6 +297,42 @@ struct PreferencesView: View {
     private func alert(_ message: String) {
         alertMessage = message
         showAlert = true
+    }
+
+    private func defaultAndInstalledASR() -> [(String, String)] {
+        var items: [(String, String)] = [(modelIdentifierDefault(for: prefs), defaultModelDisplay(for: prefs))]
+        for record in installedASR {
+            items.append((record.descriptor.id, "\(record.descriptor.name) — \(record.descriptor.provider)"))
+        }
+        return items
+    }
+
+    private func defaultAndInstalledNoise() -> [(String, String)] {
+        var items: [(String, String)] = [(defaultNoiseIdentifier(for: prefs.noiseModel), defaultNoiseDisplay(for: prefs))]
+        for record in installedNoise {
+            items.append((record.descriptor.id, record.descriptor.name))
+        }
+        return items
+    }
+
+    private var supportedLanguages: [(String, String)] {
+        ["en", "fr", "de", "es", "it", "ja", "hi"].map { ($0, $0.uppercased()) }
+    }
+
+    private var dictationModeOptions: [(DictationMode, String)] {
+        [(.streaming, "Streaming"), (.instant, "Instant"), (.notes, "Notes")]
+    }
+
+    private var pttModeOptions: [(PTTMode, String)] {
+        [(.pressHold, "Press and hold"), (.latch, "Latch"), (.toggle, "Toggle")]
+    }
+
+    private func label(for mode: PTTMode) -> String {
+        switch mode {
+        case .pressHold: return "Press and hold"
+        case .latch: return "Latch"
+        case .toggle: return "Toggle"
+        }
     }
 
     private func modelIdentifierDefault(for prefs: UserPreferences) -> String {
@@ -378,6 +380,173 @@ struct PreferencesView: View {
         }
     }
 }
+
+private struct PreferenceCard<Content: View>: View {
+    let title: String
+    let symbol: String
+    let content: Content
+
+    init(title: String, symbol: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.symbol = symbol
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(spacing: 12) {
+                Image(systemName: symbol)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(Color.accentColor)
+                    .frame(width: 32, height: 32)
+                    .background(Color.accentColor.opacity(0.12))
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                Text(title)
+                    .font(.system(size: 17, weight: .semibold))
+            }
+            content
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.white.opacity(0.08))
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+        )
+        .background(RoundedRectangle(cornerRadius: 24).fill(Color.black.opacity(0.1)))
+    }
+}
+
+private struct ToggleRow: View {
+    let title: String
+    var subtitle: String? = nil
+    @Binding var isOn: Bool
+
+    init(title: String, subtitle: String? = nil, isOn: Binding<Bool>) {
+        self.title = title
+        self.subtitle = subtitle
+        self._isOn = isOn
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Toggle(isOn: $isOn) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.system(size: 13, weight: .semibold))
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(.system(size: 12))
+                            .foregroundStyle(Color.secondary)
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct PickerRow<Selection: Hashable>: View {
+    let title: String
+    @Binding var selection: Selection
+    let items: [(Selection, String)]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.system(size: 13, weight: .semibold))
+            Picker(title, selection: $selection) {
+                ForEach(items, id: \.0) { item in
+                    Text(item.1).tag(item.0)
+                }
+            }
+            .pickerStyle(.segmented)
+        }
+    }
+}
+
+private struct ButtonRow: View {
+    let title: String
+    var subtitle: String? = nil
+    let action: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Button(action: action) {
+                HStack {
+                    Text(title)
+                        .font(.system(size: 13, weight: .semibold))
+                    Spacer()
+                    Image(systemName: "arrow.down.circle")
+                }
+                .padding(.vertical, 8)
+                .padding(.horizontal, 12)
+                .background(Color.accentColor.opacity(0.12))
+                .cornerRadius(12)
+            }
+            .buttonStyle(.plain)
+            if let subtitle, !subtitle.isEmpty {
+                Text(subtitle)
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color.secondary)
+            }
+        }
+    }
+}
+
+private struct TextFieldRow: View {
+    let title: String
+    @Binding var text: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.system(size: 13, weight: .semibold))
+            TextField("", text: $text)
+                .textFieldStyle(.roundedBorder)
+        }
+    }
+}
+
+private struct ModelList: View {
+    let title: String
+    let records: [InstalledModelRecord]
+    var onReveal: (InstalledModelRecord) -> Void
+    var onDelete: (InstalledModelRecord) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Color.secondary)
+            ForEach(records, id: \.descriptor.id) { record in
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(record.descriptor.name)
+                            .font(.system(size: 13, weight: .medium))
+                        Text("\(record.descriptor.provider) • \(formattedSize(record.descriptor.sizeMB))")
+                            .font(.system(size: 11))
+                            .foregroundStyle(Color.secondary)
+                    }
+                    Spacer()
+                    Button("Reveal") { onReveal(record) }
+                    Button(role: .destructive) { onDelete(record) } label: { Text("Remove") }
+                }
+                .buttonStyle(.borderless)
+                Divider()
+            }
+        }
+    }
+
+    private func formattedSize(_ size: Double) -> String {
+        if size > 1024 {
+            return String(format: "%.1f GB", size / 1024)
+        } else {
+            return String(format: "%.0f MB", size)
+        }
+    }
+}
+
+// Existing HotkeyRecorder and helper views remain unchanged below
 
 struct HotkeyRecorder: NSViewRepresentable {
     var onRecord: (Hotkey?) -> Void
@@ -430,31 +599,32 @@ struct HotkeyRecorder: NSViewRepresentable {
     }
 }
 
-private struct ModelRow: View {
-    let record: InstalledModelRecord
-    var onReveal: (InstalledModelRecord) -> Void
-    var onDelete: (InstalledModelRecord) -> Void
+enum DictationRuntimeHelper {
+    static func installFluidRuntime() async throws -> URL {
+        let fm = FileManager.default
+        let support = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let base = support.appendingPathComponent("mjvoice", isDirectory: true)
+        let bin = base.appendingPathComponent("bin", isDirectory: true)
+        let runner = bin.appendingPathComponent("fluid-runner")
 
-    var body: some View {
-        HStack {
-            VStack(alignment: .leading) {
-                Text(record.descriptor.name)
-                    .font(.headline)
-                Text("\(record.descriptor.provider) • \(formattedSize(record.descriptor.sizeMB))")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
-            Button("Reveal") { onReveal(record) }
-            Button(role: .destructive) { onDelete(record) } label: { Text("Remove") }
+        if fm.isExecutableFile(atPath: runner.path) {
+            return runner
         }
+
+        if ProcessInfo.processInfo.environment["APP_SANDBOX_CONTAINER_ID"] != nil {
+            throw RuntimeInstallError.sandboxedInstruction
+        }
+        throw RuntimeInstallError.sandboxedInstruction
     }
 
-    private func formattedSize(_ size: Double) -> String {
-        if size > 1024 {
-            return String(format: "%.1f GB", size / 1024)
-        } else {
-            return String(format: "%.0f MB", size)
+    enum RuntimeInstallError: LocalizedError {
+        case sandboxedInstruction
+
+        var errorDescription: String? {
+            switch self {
+            case .sandboxedInstruction:
+                return "mjvoice runs inside the App Sandbox. Open Tools → Install Fluid Runtime from Terminal using tools/install_fluid_runner.sh and try again."
+            }
         }
     }
 }

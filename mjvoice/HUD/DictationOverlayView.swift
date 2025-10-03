@@ -35,8 +35,8 @@ struct DictationOverlayView: View {
             return Color(hue: hue, saturation: 0.85, brightness: 0.95)
         }
         let gradient = AngularGradient(gradient: Gradient(colors: colors), center: .center)
-        let lineWidth = CGFloat(18 + model.audioLevel * 36)
-        let blurRadius = CGFloat(36 + model.audioLevel * 48)
+        let lineWidth = CGFloat(10 + model.audioLevel * 18)
+        let blurRadius = CGFloat(28 + model.audioLevel * 36)
         let inset = edgeInset + lineWidth / 2
 
         return Rectangle()
