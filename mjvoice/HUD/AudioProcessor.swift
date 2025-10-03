@@ -3,8 +3,9 @@ import Accelerate
 
 final class AudioProcessor: NSObject {
     private let audioEngine = AVAudioEngine()
-    private let smoothingFactor: Float = 0.07
     private var smoothedLevel: Float = 0
+    private let attackCoefficient: Float = 0.18
+    private let releaseCoefficient: Float = 0.035
     private var isRunning = false
 
     var onAudioLevelUpdate: ((Float) -> Void)?
@@ -23,7 +24,7 @@ final class AudioProcessor: NSObject {
         let inputNode = audioEngine.inputNode
         let format = inputNode.outputFormat(forBus: 0)
 
-        inputNode.installTap(onBus: 0, bufferSize: 512, format: format) { [weak self] buffer, _ in
+        inputNode.installTap(onBus: 0, bufferSize: 256, format: format) { [weak self] buffer, _ in
             self?.process(buffer: buffer)
         }
     }
@@ -74,7 +75,8 @@ final class AudioProcessor: NSObject {
         let db = 20 * log10f(max(rms, 0.00001))
         let normalized = max(0, min(1, (db + 45) / 35))
 
-        smoothedLevel = smoothedLevel * (1 - smoothingFactor) + normalized * smoothingFactor
+        let coefficient: Float = normalized > smoothedLevel ? attackCoefficient : releaseCoefficient
+        smoothedLevel += (normalized - smoothedLevel) * coefficient
 
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
