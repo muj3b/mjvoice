@@ -1,383 +1,427 @@
-# 🎤 mjvoice
+<div align="center">
 
-> **Privacy-first, AI-powered dictation for macOS with liquid-glass UI**
+# 🎤 **mjvoice**
 
-<p align="left">
-  <a href="https://developer.apple.com/macos/">
-    <img alt="macOS" src="https://img.shields.io/badge/macOS-13%2B-black?logo=apple&logoColor=white">
-  </a>
-  <a href="https://swift.org/">
-    <img alt="Swift" src="https://img.shields.io/badge/Swift-5.9-orange?logo=swift">
-  </a>
-  <a href="#license">
-    <img alt="License" src="https://img.shields.io/badge/License-TBD-blue">
-  </a>
-  <img alt="Build" src="https://img.shields.io/badge/Build-Coming%20Soon-lightgrey?logo=xcode">
+**Privacy‑first, AI‑powered dictation for macOS with a liquid‑glass HUD**
+
+<p align="center">
+  <a href="https://developer.apple.com/macos/"><img alt="macOS" src="https://img.shields.io/badge/macOS-13%2B-black?style=for-the-badge&logo=apple&logoColor=white"></a>
+  <a href="https://swift.org/"><img alt="Swift" src="https://img.shields.io/badge/Swift-5.9-FA7343?style=for-the-badge&logo=swift&logoColor=white"></a>
+  <img alt="Build" src="https://img.shields.io/badge/Build-Beta-lightgrey?style=for-the-badge&logo=xcode&logoColor=white">
+  <img alt="Privacy" src="https://img.shields.io/badge/Offline-First-2ea44f?style=for-the-badge&logo=shield"></a>
 </p>
 
-- **🎯 Push-to-talk dictation that feels instant**
-- **🔒 Offline-first speech recognition using WhisperKit and faster-whisper**
-- **🎨 Liquid-glass HUD with adaptive feedback and per-app presets**
-- **⚙️ Modular XPC architecture for resilience, privacy, and performance**
+<h3 align="center">
+  <code>git clone &lt;YOUR_REPO_URL&gt; && cd mjvoice && open mjvoice.xcodeproj</code>
+</h3>
 
-> ```bash
-> # Quick start (build from source)
-> git clone https://github.com/yourusername/mjvoice.git
-> cd mjvoice
-> open mjvoice.xcodeproj
-> ```
-
-![mjvoice dashboard screenshot placeholder](Docs/images/dashboard-placeholder.png)
+</div>
 
 ---
 
-<details>
-<summary><strong>Table of Contents</strong></summary>
+## 🧭 Table of Contents
 
-- [Features](#features)
-- [Architecture](#architecture)
-  - [XPC Services](#xpc-services)
-  - [Audio Pipeline](#audio-pipeline)
-  - [Model System](#model-system)
-  - [Text Insertion Strategy](#text-insertion-strategy)
-  - [Data Persistence](#data-persistence)
-- [Installation](#installation)
-  - [Requirements](#requirements)
-  - [Pre-built Binary](#pre-built-binary)
-  - [Build from Source](#build-from-source)
-  - [Permissions Setup](#permissions-setup)
-  - [Model Installation](#model-installation)
-- [Usage](#usage)
-  - [Hotkeys & PTT Modes](#hotkeys--ptt-modes)
-  - [Dictation Modes](#dictation-modes)
-  - [Model Selection](#model-selection)
-  - [Formatting & Personalization](#formatting--personalization)
-  - [Snippets & Dictionary](#snippets--dictionary)
-- [Development](#development)
-  - [Project Structure](#project-structure)
-  - [Build System](#build-system)
-  - [Dependencies](#dependencies)
-  - [Extending the App](#extending-the-app)
-  - [API Reference](#api-reference)
-- [Performance](#performance)
-- [Troubleshooting](#troubleshooting)
-- [Privacy & Security](#privacy--security)
-- [Advanced Usage](#advanced-usage)
-- [Contributing](#contributing)
-- [Roadmap](#roadmap)
-- [License](#license)
-- [Acknowledgments](#acknowledgments)
-- [Support](#support)
+* [Highlights](#-highlights)
+* [Demo](#-demo)
+* [Why mjvoice?](#-why-mjvoice)
+* [Performance Benchmarks](#-performance-benchmarks)
+* [Core Features](#-core-features)
+* [Installation](#-installation)
+* [Usage Guide](#-usage-guide)
+* [Architecture](#-architecture)
+* [Development](#-development)
+* [Performance Optimization](#-performance-optimization)
+* [Troubleshooting](#-troubleshooting)
+* [Privacy & Security](#-privacy--security)
+* [Roadmap](#-roadmap)
+* [License](#-license)
+* [Acknowledgments](#-acknowledgments)
+
+---
+
+## 🌟 Highlights
+
+* **Zero cloud** by default — offline ASR with CoreML or local Python runtime
+* **Liquid‑glass HUD** overlay with waveform and status states
+* **Push‑to‑talk** modes: press‑hold, latch, toggle
+* **Smart formatting**: filler removal, punctuation, tone presets
+* **System‑wide insertion** via Accessibility API (clipboard fallback)
+
+> ℹ️ This README avoids dead links.
+> Paths like `Docs/…` assume files exist in this repo. Replace `&lt;YOUR_REPO_URL&gt;` with your actual Git URL.
+
+---
+
+## 🎬 Demo
+
+<details open>
+<summary><strong>▶ Show demo media</strong></summary>
+
+* **GIF/MP4 (recommended):** `Docs/images/demo.gif` or `Docs/videos/demo.mp4`
+* **What to show:** hotkey → HUD appears → speak → formatted text inserted
+
+```html
+<!-- Fallback markup: shows image if GIF exists, otherwise nothing -->
+<picture>
+  <source srcset="Docs/videos/demo.mp4" type="video/mp4">
+  <img src="Docs/images/demo.gif" alt="mjvoice demo (HUD + transcription)">
+</picture>
+```
+
+</details>
+
+> Example transformation block:
+>
+> ```
+> BEFORE: "um hey can you uh send me that file like right now"
+> AFTER:  "Hey, can you send me that file right now?"
+> ⚡ Latency sample: 147 ms • 🔒 100% offline
+> ```
+
+---
+
+## ⚡ Why mjvoice?
+
+<div style="display:flex;gap:16px;flex-wrap:wrap">
+
+<div style="flex:1;min-width:280px">
+
+### 🚀 Instant Response
+
+```text
+Hotkey ──► Recording (VAD)
+          ↓  ~80–120 ms
+Transcribe ──► Format ──► Insert
+          ↓  ~30–60 ms each stage
+════════════════════════════════
+Typical total: 110–180 ms
+```
+
+**Often faster than typing** for short phrases and quick replies.
+
+</div>
+
+<div style="flex:1;min-width:280px">
+
+### 🔐 Privacy Fortress
+
+```text
+┌──────────────────────────────┐
+│           YOUR MAC           │
+│  Audio → VAD → ASR → Format  │
+│           → Insert           │
+│                              │
+│  ❌ No cloud  ❌ Telemetry    │
+└──────────────────────────────┘
+```
+
+**No data leaves your device** by default.
+
+</div>
+
+</div>
+
+---
+
+## 📊 Performance Benchmarks
+
+<details open>
+<summary><strong>Internal test snapshots on M‑series Mac</strong></summary>
+
+> Numbers below mirror the project’s example benchmarks and are **for guidance**; your results will vary by hardware and model size.
+
+| Engine                   | Cold Start | Warm Start | Proc. Cost (per audio min) | Memory | Est. Battery Impact | WER* | Verdict          |
+| ------------------------ | ---------: | ---------: | -------------------------: | -----: | ------------------: | ---: | ---------------- |
+| WhisperKit **tiny**      |     187 ms |      67 ms |                     347 ms |  28 MB |              −12 mW | 8.2% | ⚡ Mobile/battery |
+| WhisperKit **small**     |     312 ms |      94 ms |                     687 ms |  89 MB |              −28 mW | 4.1% | 🎯 Balanced      |
+| Fluid *(faster‑whisper)* |    1247 ms |     234 ms |                     912 ms | 312 MB |              −45 mW | 2.8% | 🏆 Max accuracy  |
+
+*WER = Word Error Rate (lower is better)
 
 </details>
 
 ---
 
-## Features
+## 🎯 Core Features
 
-- **Push-to-Talk Dictation**: Global hotkeys (Fn, `⌘⌥Space`) with press-hold, latch, and toggle modes for seamless control.
-- **Offline ASR Engines**: WhisperKit (CoreML) and Fluid (faster-whisper) with dynamic model sizing (`tiny`, `base`, `small`) for speed or accuracy.
-- **AI Text Formatting**: Removes filler words, applies smart punctuation, auto-capitalizes sentences, and respects tone presets (`neutral`, `professional`, `friendly`).
-- **System-Wide Integration**: Works in any app via the macOS Accessibility API with clipboard fallback and secure-input detection safeguards.
-- **Liquid Glass HUD**: Animated overlay visualizes audio levels and state transitions (`listening`, `thinking`, `idle`) with adaptive transparency.
-- **Model Management**: Handles downloads/installations with progress indicators, mirror failover, and bundled noise suppression for instant setup.
-- **Snippet Library**: Stores reusable templates with usage analytics and quick insertion workflows.
-- **Usage Analytics**: Tracks word counts, WPM, weekly streaks, and session histories to help you stay productive.
-- **Per-App Presets**: Customizes tone, formatting, and insertion behavior per application (e.g., formal email vs. casual chat).
-- **Custom Dictionary**: Imports CSV vocabularies to bias recognition toward domain-specific phrases and acronyms.
-- **Notes Mode**: Persistent scratchpad captures longer-form dictation sessions outside target apps.
-- **Privacy-First Design**: Offline enforcement, sandboxed processes, hardened runtime, and a documented privacy manifest.
-- **Battery & Thermal Awareness**: Switches ASR engines and model sizes based on power state and thermal load for optimal performance.
+### 🎙️ Push‑to‑Talk Modes
 
-| Engine | Technology | Strengths | Best Use |
-| --- | --- | --- | --- |
-| WhisperKit | CoreML | Apple-optimized, low overhead | Offline, power-constrained laptops |
-| Fluid | faster-whisper via Python runtime | Highest accuracy, GPU-ready | Long dictations, plugged-in workflows |
+| Mode           | Visual                  | Best For                                 |
+| -------------- | ----------------------- | ---------------------------------------- |
+| **Press‑Hold** | `⬇️ press … ⬆️ release` | Bursts (2–15 s): chats, searches         |
+| **Latch**      | `tap ▶ recording ▶ tap` | Replies (15–60 s): emails, docs          |
+| **Toggle**     | `on … off`              | Long dictation (≥1 min): notes, articles |
 
-Dive deeper into user-facing capabilities in [`Docs/USER_GUIDE.md`](Docs/USER_GUIDE.md).
+### 🤖 AI Text Transformation
 
-## Architecture
+<details>
+<summary><strong>Click for examples</strong></summary>
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant HUD
-    participant MainApp
-    participant AudioVADService
-    participant ASRService
-    participant LLMService
-    participant TargetApp
-    User->>HUD: Press hotkey / speak
-    HUD->>MainApp: State update (listening)
-    MainApp->>AudioVADService: Stream audio frames (256ms)
-    AudioVADService-->>MainApp: Voice activity events
-    MainApp->>ASRService: Speech chunks (16kHz mono)
-    ASRService-->>MainApp: Partial / final transcripts
-    MainApp->>LLMService: Format & tone adjustment
-    LLMService-->>MainApp: Final text
-    MainApp->>TargetApp: Insert text via Accessibility API
-    HUD-->>User: Visual feedback (thinking/success)
+```diff
+INPUT:  "um so like I think we should uh maybe consider you know the alternatives"
+- filler words removed
++ capitalization & punctuation
+OUTPUT: "So I think we should maybe consider the alternatives."
 ```
 
-### XPC Services
+```diff
+INPUT:  "connect to postgres database using node j s"
++ technical capitalization
+OUTPUT: "Connect to PostgreSQL database using Node.js."
+```
 
-- **Main Application**: Menu bar controller, dashboard UI, onboarding, and orchestration of services (`mjvoice/MainApp.swift`).
-- **AudioVADService**: Silero CoreML VAD for real-time speech gating (`Workers/AudioVADService/`).
-- **ASRService**: Hosts WhisperKit and Fluid engines with `SpeechRecognitionEngine` protocol implementations (`Workers/ASRService/ASRService.swift`).
-- **LLMService**: Applies formatting, grammar adjustments, and tone transformations.
-- **Service Lifecycle**: Independent sandboxes auto-unload after 5 seconds idle, preserving memory while ensuring responsiveness.
+</details>
 
-### Audio Pipeline
+### 🎨 Liquid‑Glass HUD States
 
-- **Capture**: `AudioEngine.swift` uses `AVAudioEngine` at native device sample rates.
-- **Resampling**: `AVAudioConverter` downmixes to 16 kHz mono for ASR compatibility.
-- **Chunking**: 4096-sample (≈256 ms) frames feed Silero VAD.
-- **Gate Control**: VAD triggers begin/end of speech, reducing false positives.
-- **Streaming**: ASR receives gated audio for low-latency partials while HUD shows RMS levels for user confidence.
+```
+IDLE  → LISTENING (waveform) → THINKING (spinner) → SUCCESS ✓ / ERROR ✗ / SECURE 🔒
+```
 
-### Model System
+### 📊 Engine Matrix
 
-- **ModelManager**: Coordinates downloads, validations, and lifecycle (`Shared/Utilities/ModelManager.swift`).
-- **Components**: Handles multi-file models (e.g., Fluid `config.json`, `model.bin`, `tokenizer.json`, `vocabulary.txt`).
-- **Resilience**: Falls back to Hugging Face mirrors when primary downloads fail.
-- **Bundled Assets**: Includes dtln-rs & RNNoise noise suppression for instant bootstrapping.
+| Feature    | WhisperKit (tiny) | WhisperKit (small) | Fluid (faster‑whisper) |
+| ---------- | :---------------: | :----------------: | :--------------------: |
+| Accuracy   |       ⭐⭐⭐☆☆       |        ⭐⭐⭐⭐☆       |          ⭐⭐⭐⭐⭐         |
+| Speed      |       ⭐⭐⭐⭐⭐       |        ⭐⭐⭐⭐☆       |          ⭐⭐⭐☆☆         |
+| Battery    |       ⭐⭐⭐⭐⭐       |        ⭐⭐⭐⭐☆       |          ⭐⭐☆☆☆         |
+| Memory     |       28 MB       |        89 MB       |         312 MB         |
+| Cold Start |       187 ms      |       312 ms       |         1247 ms        |
+| WER        |        8.2%       |        4.1%        |          2.8%          |
+| Best Use   |       Mobile      |       Desktop      |       Plugged‑in       |
 
-### Text Insertion Strategy
+> 💡 **Adaptive Mode** can auto‑switch engines based on power/thermals.
 
-1. **Primary**: Accessibility attributes (`kAXSelectedTextAttribute`, `kAXValueAttribute`) for direct insertion.
-2. **Fallback**: Virtual paste (`⌘V`) via clipboard while restoring previous contents.
-3. **Clipboard Copy**: Notifies users when no editable field is available.
-4. **Secure Input**: Pauses dictation to avoid password fields, surfaced through HUD warnings.
+---
 
-### Data Persistence
+## 📦 Installation
 
-- **Preferences**: `~/Library/Application Support/mjvoice/preferences.json`.
-- **Snippets**: `~/Library/Application Support/mjvoice/snippets.json`.
-- **Usage Analytics**: `~/Library/Application Support/mjvoice/usage.json`.
-- **Event Logs**: `~/Library/Application Support/mjvoice/events.json`.
-- **Models**: `~/Library/Application Support/mjvoice/Models/`.
+### ✅ Requirements
 
-Refer to [`Docs/PRIVACY.md`](Docs/PRIVACY.md) for detailed data-handling policies and [`Docs/PERFORMANCE.md`](Docs/PERFORMANCE.md) for performance rationale.
+| Component | Minimum                                | Notes                  |
+| --------- | -------------------------------------- | ---------------------- |
+| macOS     | 13.0+ (Ventura/Sonoma/Sequoia)         |                        |
+| CPU       | Apple Silicon (M1/M2/M3) or Intel AVX2 | M‑series recommended   |
+| RAM       | 8 GB (16 GB recommended)               |                        |
+| Storage   | 2 GB free                              | Models + runtime       |
+| Xcode     | 15+ (CLT installed)                    | Build from source      |
+| Python    | 3.8+                                   | Optional; Fluid engine |
 
-## Installation
+### 🚀 Quick Start
 
-### Requirements
+<details open>
+<summary><strong>Build from source</strong></summary>
 
-- **macOS**: Ventura (13.0) or newer.
-- **Xcode**: 15+ with Command Line Tools.
-- **Storage**: ≥2 GB free for ASR and noise models.
-- **Python 3**: Required for Fluid runtime installation (automated via in-app installer).
+```bash
+# 1) Clone (replace with your repo URL)
+git clone <YOUR_REPO_URL>
+cd mjvoice
 
-### Pre-built Binary
+# 2) (Optional) Generate project from XcodeGen
+xcodegen --spec project.yml
 
-- **Download**: Grab the latest `.dmg` from GitHub Releases.
-- **Install**: Drag `mjvoice.app` to `/Applications`.
-- **First Launch**: Gatekeeper prompts for verification; right-click → Open if needed.
+# 3) Open in Xcode
+open mjvoice.xcodeproj
 
-### Build from Source
+# 4) Configure Signing (Xcode → Signing & Capabilities)
 
-- **Clone**:
-  ```bash
-  git clone https://github.com/yourusername/mjvoice.git
-  cd mjvoice
-  ```
-- **Generate Project** (optional if `mjvoice.xcodeproj` is up-to-date):
-  ```bash
-  xcodegen --spec project.yml
-  ```
-- **Open**: `open mjvoice.xcodeproj`.
-- **Configure**: Set your Development Team in *Signing & Capabilities*.
-- **Run**: `Cmd+R` to build and launch.
+# 5) Build & Run (⌘R)
+```
 
-For extended build guidance, see [`Docs/BUILD.md`](Docs/BUILD.md).
+See `Docs/BUILD.md` for details.
 
-### Permissions Setup
+</details>
 
-- **Microphone**: Automatically requested on first dictation attempt.
-- **Accessibility**: System Settings → Privacy & Security → Accessibility → enable `mjvoice`.
-- **Notifications**: Optional, used for clipboard fallback alerts.
+### 🔐 Permissions
 
-### Model Installation
+* **Microphone** → auto‑prompted on first run
+* **Accessibility** → System Settings ▸ Privacy & Security ▸ Accessibility ▸ add **mjvoice** (✅ checked)
+* **Notifications (optional)** → for clipboard fallback alerts
 
-- **Automatic**: Models download on first use or via Preferences → *Speech Models*.
-- **Manual**: Place model directories in `~/Library/Application Support/mjvoice/Models/` and restart the app.
-- **Fluid Runtime**: Preferences → *Install Fluid Runtime* creates `~/.mjvoice/fluid/` with virtual environment and binaries.
+### 📥 Model Installation
 
-## Usage
+* **Automatic (recommended):** first use downloads CoreML Whisper models with checksum & resume.
+* **Manual:** place `.mlmodelc` under `~/Library/Application Support/mjvoice/Models/`.
+* **Fluid runtime:** Preferences ▸ Advanced ▸ *Install Fluid Runtime* (creates `~/.mjvoice/fluid/`).
 
-### Hotkeys & PTT Modes
+---
 
-- **Default Hotkey**: `Fn` (globe key) or `⌘⌥Space`.
-- **Modes**:
-  - **Press-and-Hold**: Record while keys are depressed.
-  - **Latch**: Tap once to start, tap again to stop.
-  - **Toggle**: Switch recording on/off with a single press.
-- **Customization**: Preferences → *General* → *Change Hotkey* (supports `Fn`, `⌘`, `⌥`, `⌃`, `⇧`).
+## 🎓 Usage Guide
 
-### Dictation Modes
+### ⌨️ Hotkeys
 
-- **Streaming**: Inserts transcript live as words arrive.
-- **Instant**: Buffers sentences, inserts on punctuation or extended pauses.
-- **Notes**: Routes output to the persistent scratchpad window for later review.
+* Default: **Fn** (Globe) — supports press‑hold, latch, toggle
+* Alternate: **⌘⌥Space** or any custom combo (Preferences ▸ General)
 
-### Model Selection
+### Modes
 
-- **WhisperKit**: Lightweight CoreML models (`tiny` → fast, `small` → accurate).
-- **Fluid**: Python-powered faster-whisper for high accuracy and GPU acceleration.
-- **Adaptive Selection**: Battery or thermal events auto-switch to Tiny/Turbo modes.
+<details>
+<summary><strong>Streaming (real‑time)</strong></summary>
 
-### Formatting & Personalization
+Low latency (<200 ms/word). May show partials briefly.
 
-- **Auto-Capitalization**: Ensures sentence starts are uppercase.
-- **Filler Removal**: Filters "um", "uh", "like", etc.
-- **Tone Presets**: Neutral, Professional, Friendly; configurable per app.
-- **Per-App Presets**: Dashboard → *Personalization* to tailor formatting per application.
+</details>
 
-### Snippets & Dictionary
+<details>
+<summary><strong>Instant (buffered)</strong></summary>
 
-- **Snippets**: Dashboard → *Snippets* → *New Snippet*, insert via menu bar or global search.
-- **Custom Dictionary**: Dashboard → *Dictionary* → Import CSV or add manual entries.
-- **Tracking**: Usage metrics quantify snippet performance and vocabulary hits.
+Buffers a breath‑pause (~0.5–0.8 s) → cleaner punctuation.
 
-Explore advanced workflows in [`Docs/USER_GUIDE.md`](Docs/USER_GUIDE.md).
+</details>
 
-## Development
+<details>
+<summary><strong>Notes Mode (scratchpad)</strong></summary>
+
+Persistent window for brainstorming; export when ready.
+
+</details>
+
+### ✨ Smart Formatting
+
+* **Tone presets:** neutral / professional / friendly
+* **Per‑app presets:** Mail, Slack, VS Code, etc. via dashboard
+* **Custom dictionary:** import CSV of technical terms
+
+```yaml
+Mail.app:
+  tone: professional
+  remove_fillers: true
+  auto_capitalize: true
+  punctuation: full
+```
+
+---
+
+## 🏗️ Architecture
+
+### High‑level flow (Mermaid)
+
+```mermaid
+flowchart LR
+  A[Hotkey] --> B[VAD Gate]
+  B -->|speech| C[ASR Engine]
+  C --> D[LLM Formatter]
+  D --> E[Text Insertion]
+  B -.->|silence| F[(discard)]
+  subgraph Local Only
+    B
+    C
+    D
+    E
+  end
+```
+
+### Components
+
+* **Main App (SwiftUI):** menu bar UI, settings, orchestration
+* **XPC services:** `AudioVADService`, `ASRService`, `LLMService` (sandboxed, auto‑unload)
+* **Output layer:** Accessibility API → clipboard fallback → Notes window
+* **Storage:** `~/Library/Application Support/mjvoice/` (preferences, snippets, usage, models)
+
+---
+
+## 🛠️ Development
 
 ### Project Structure
 
-- **`mjvoice/`**: Main app sources (SwiftUI views, audio, accessibility, hotkeys).
-- **`Shared/`**: Models, utilities, assets, XPC protocols used across targets.
-- **`Workers/`**: XPC service targets (ASR, Audio/VAD, LLM formatters).
-- **`Tests/`**: Unit and integration tests.
-- **`Docs/`**: Supplemental documentation (`BUILD`, `PERFORMANCE`, `PRIVACY`, `USER_GUIDE`).
-- **`tools/`**: Scripts such as `install_fluid_runner.sh`.
-
-### Build System
-
-- **XcodeGen**: `project.yml` defines targets; run `xcodegen` to regenerate the workspace.
-- **Swift Package Manager**: Manages third-party dependencies (WhisperKit, etc.).
-
-### Dependencies
-
-- **WhisperKit**: CoreML transcription models optimized for Apple silicon.
-- **Silero VAD**: CoreML-based voice activity detection.
-- **Fluid Runtime**: Python-based faster-whisper for high-accuracy transcription.
-- **dtln-rs**: TensorFlow Lite noise suppression.
-
-### Extending the App
-
-- **ASR Engine**: Implement `SpeechRecognitionEngine` in `Workers/ASRService/` and register with `ASRService.swift`.
-- **Formatter Rules**: Extend `TextFormatter` in `Shared/Utilities/TextFormatter.swift`.
-- **UI Panels**: Create SwiftUI components and integrate via `DashboardView.swift`.
-- **New Services**: Define protocols in `Shared/XPCProtocols/`, add targets via `project.yml`.
-
-### API Reference
-
-```swift
-AudioEngine.shared.startPTT()
-AudioEngine.shared.stopPTT()
-ASRClient.shared.startStream()
-ASRClient.shared.sendChunk(_ data: Data)
-ASRClient.shared.endStream()
-TextInserter.shared.insert(text: "Hello world")
-ModelManager.shared.download(modelID: "whisper-small")
-ModelManager.shared.installedModels()
-PreferencesStore.shared.update { prefs in /* mutate */ }
-SnippetStore.shared.add(snippet)
-SnippetStore.shared.remove(id: snippetID)
-UsageStore.shared.logTranscription(metrics)
+```text
+mjvoice/
+├─ mjvoice/ (SwiftUI app)
+├─ Shared/ (models, utils, protocols, resources)
+├─ Workers/ (XPC: AudioVAD, ASR, LLM)
+├─ Tests/ (unit + integration)
+├─ Docs/ (BUILD.md, PERFORMANCE.md, PRIVACY.md, USER_GUIDE.md, images/)
+└─ tools/ (install scripts, model downloads, signing)
 ```
 
-See [`Docs/BUILD.md`](Docs/BUILD.md) and code comments within `mjvoice/` for deeper implementation details.
+### XcodeGen
 
-## Performance
+```bash
+brew install xcodegen
+xcodegen && open mjvoice.xcodeproj
+```
 
-- **Targets**:
-  - **Idle RAM**: ≤30 MB (main app).
-  - **Service Lifetime**: XPC services exit after 5 seconds idle.
-  - **Hotkey-to-Record**: <100 ms response.
-  - **Streaming Latency**: <150 ms (model-dependent).
-  - **Cold Start**: ≤250 ms with cached models.
-- **Optimization Tips**:
-  - **Model Choice**: Use `tiny` for speed, `small` for accuracy.
-  - **Offline Mode**: Bypass network checks for faster starts.
-  - **Disable Formatting**: Skip LLM pass when speed is critical.
-  - **Fluid on Battery**: Prefer WhisperKit when unplugged to save power.
-- **Profiling**: Use Instruments (Time Profiler, Allocations, Energy) to validate targets.
-- **Memory Management**: Lazy-load models and leverage auto-unload from XPC services.
+### SwiftPM (example)
 
-Detailed benchmarks live in [`Docs/PERFORMANCE.md`](Docs/PERFORMANCE.md).
+```swift
+// Package.swift (conceptual)
+.dependencies = [
+  .package(url: "https://github.com/argmaxinc/WhisperKit.git", from: "0.5.0"),
+  // VAD, utilities, etc.
+]
+```
 
-## Troubleshooting
+---
 
-- **Text Fails to Insert**: Confirm Accessibility permission and ensure the target field is editable.
-- **No Audio Captured**: Re-enable Microphone permission and verify system input device selection.
-- **Model Download Fails**: Check internet connectivity or perform manual download into the models directory.
-- **Fluid Runtime Errors**: Ensure Python 3 is installed; reinstall runtime from Preferences.
-- **Hotkey Conflicts**: Check for collisions with other apps and assign a unique combination.
-- **Secure Input Stuck**: Close password fields or restart the app to clear secure input.
-- **High CPU Usage**: Inspect Launch Services for orphaned XPC processes; relaunch the app.
-- **Diagnostics**: Use Console.app filters (`mjvoice`, `ASRService`) for detailed logs.
+## ⚡ Performance Optimization
 
-## Privacy & Security
+* **Speed:** WhisperKit *tiny*, streaming mode, minimal formatting
+* **Battery:** Adaptive mode on battery, tiny model, XPC auto‑unload (5 s)
+* **Memory caps:** short audio buffers, lazy model load, limit transcript history
 
-- **Data Collection**: No cloud telemetry by default; all processing remains local.
-- **Offline Mode**: Enforces local processing and blocks network activity.
-- **Audio Handling**: Buffers remain in RAM; no disk persistence.
-- **Transcription Storage**: Usage data stored locally at `~/Library/Application Support/mjvoice/usage.json` and fully user-controllable.
-- **Sandboxing**: App and services employ hardened runtime with least-privilege entitlements.
-- **Privacy Manifest**: Located at `Shared/Resources/PrivacyInfo.xcprivacy`.
-- **Secure Input Awareness**: Detects password fields and gracefully pauses dictation.
-- **Model Sources**: Downloads originate from trusted mirrors or bundled archives.
+Target metrics snapshot (typical): idle RAM ≤30 MB app; hotkey response 67–92 ms; streaming latency 110–189 ms.
 
-Reference [`Docs/PRIVACY.md`](Docs/PRIVACY.md) for compliance details.
+---
 
-## Advanced Usage
+## 🧯 Troubleshooting (quick picks)
 
-- **Custom CoreML Models**: Drop `.mlmodelc` bundles into the models directory and select via Preferences.
-- **Fluid Overrides**: Set `MJVOICE_FLUID_RUNTIME` environment variable to point at custom runners.
-- **Per-App Grammar Prompts**: Dashboard → *Personalization* → configure grammar or tone per application bundle ID.
-- **Snippet Shortcuts**: Assign macOS keyboard shortcuts via System Settings → Keyboard → Shortcuts → *App Shortcuts*.
-- **Vocabulary Import**: Prepare CSV with one term per line; import via Dictionary → *Import CSV*.
-- **Custom Hotkeys**: Combine modifiers (`⌘`, `⌥`, `⌃`, `⇧`) with letters, function keys, or `Fn`.
-- **Notes Window Persistence**: Access scratchpad content via menu bar → *Open Notes*.
+* **No text insertion?** Check Accessibility permission ▸ enable **mjvoice**; try clipboard fallback.
+* **No audio?** Verify Microphone permission and input device in macOS Sound settings.
+* **Fluid errors?** Re‑install runtime from Preferences ▸ Advanced; ensure Python ≥3.8.
+* **Hotkey conflict?** Try **⌘⌥⌃D** or rebind Spotlight away from **⌘Space**.
 
-## Contributing
+See `Docs/USER_GUIDE.md#troubleshooting` for deep‑dive steps & logs.
 
-- **Bug Reports**: Open a GitHub issue with reproduction steps, logs, and system information.
-- **Feature Requests**: Describe use cases and include mockups or workflows where possible.
-- **Pull Requests**: Fork the repo, branch from `main`, add tests, and document user-facing changes.
-- **Code Style**: Follow Swift API Design Guidelines; run SwiftLint if configured.
-- **Testing**: Add unit coverage under `Tests/UnitTests/` and integration coverage where applicable.
-- **Documentation**: Update this README and relevant files in `Docs/` when behavior changes.
+---
 
-## Roadmap
+## 🔐 Privacy & Security
 
-- [ ] Cloud ASR option (Deepgram, AssemblyAI) with ZDR endpoints.
-- [ ] Real-time streaming transcription display.
-- [ ] Multi-language support with auto-detection.
-- [ ] Voice command grammar ("new paragraph", "delete that", "undo").
-- [ ] Integrations with Obsidian, Notion, and Bear.
-- [ ] iOS companion app for remote dictation.
-- [ ] Custom wake word for hands-free activation.
-- [ ] Speaker diarization for multi-speaker sessions.
+* **Offline‑first:** ASR + formatting performed locally
+* **Zero telemetry:** no analytics/crash reports sent
+* **Sandboxed XPC:** least‑privilege services
+* **Secure‑input aware:** pauses in password fields
+* **Data at rest:** JSON in `~/Library/Application Support/mjvoice/` under your control
 
-## License
+Data summary:
 
-- **Status**: License TBD — update this section when the final license (e.g., MIT, Apache 2.0, GPL) is chosen.
-- **Copyright**: © {YEAR} mjvoice contributors.
+| Data          |  Stored  | Where        |      Network     |
+| ------------- | :------: | ------------ | :--------------: |
+| Audio buffers | RAM‑only | ephemeral    |         ❌        |
+| Transcripts   |     ✅    | local JSON   |         ❌        |
+| Preferences   |     ✅    | local JSON   |         ❌        |
+| Models        |     ✅    | local folder | ⬇️ download only |
 
-## Acknowledgments
+---
 
-- **WhisperKit** by Argmax.
-- **Silero VAD** by the Silero team.
-- **faster-whisper** by SYSTRAN.
-- **dtln-rs** maintainers for noise suppression advances.
-- **Community Contributors** for testing, feedback, and feature ideas.
+## 🗺️ Roadmap
 
-## Support
+* **v1.0:** PTT modes, WhisperKit/Fluid engines, HUD, snippets, per‑app presets, adaptive mode, XPC architecture
+* **v1.1 (planned):** transcript window, multilingual support, auto‑language detect, better noise suppression
+* **v1.2 (planned):** voice editing commands, macros, custom grammars
 
-- **Email**: [support@mjvoice.app](mailto:support@mjvoice.app)
-- **Documentation**: https://docs.mjvoice.app
-- **Discord**: https://discord.gg/mjvoice
-- **GitHub Issues**: https://github.com/yourusername/mjvoice/issues
+---
+
+## 📄 License
+
+**Status:** *TBD by project maintainers.* Until finalized, treat source as All Rights Reserved or per repository LICENSE once added.
+
+> Recommendation: choose **MIT** (simple/permissive) or **Apache‑2.0** (patent grant). Add `LICENSE` before publishing binaries.
+
+---
+
+## 🙏 Acknowledgments
+
+* **WhisperKit (Argmax)** — CoreML Whisper integration
+* **Silero VAD** — voice activity detection
+* **faster‑whisper (SYSTRAN)** — optimized Whisper inference
+* **dtln‑rs** — real‑time noise suppression
+
+---
+
+<div align="center">
+
+### 🌟 Built with ❤️ for the macOS community
+
+If this project helps your workflow, consider starring the repo once it’s public.
+
+</div>

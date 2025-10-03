@@ -26,9 +26,7 @@ final class UsageStore: ObservableObject {
     @Published private(set) var transcriptions: [TranscriptionRecord] = []
 
     private let fileManager = FileManager.default
-    private let queue = DispatchQueue(label: "com.mjvoice.usagestore", qos: .utility)
     private let url: URL
-    private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
 
     private init() {
@@ -36,7 +34,6 @@ final class UsageStore: ObservableObject {
         let dir = base.appendingPathComponent("mjvoice", isDirectory: true)
         try? fileManager.createDirectory(at: dir, withIntermediateDirectories: true)
         url = dir.appendingPathComponent("usage.json")
-        encoder.outputFormatting = [.prettyPrinted]
         load()
     }
 
@@ -65,15 +62,9 @@ final class UsageStore: ObservableObject {
                                          words: words,
                                          duration: duration,
                                          wpm: wpm)
-        queue.async { [weak self] in
-            guard let self else { return }
-            var existing = self.transcriptions
-            existing.insert(record, at: 0)
-            Task { @MainActor in
-                self.transcriptions = existing
-            }
-            self.persist(records: existing)
-        }
+        transcriptions.insert(record, at: 0)
+        let snapshot = transcriptions
+        persistAsync(records: snapshot)
     }
 
     var totalWords: Int {
@@ -139,12 +130,17 @@ final class UsageStore: ObservableObject {
         }
     }
 
-    private func persist(records: [TranscriptionRecord]) {
-        do {
-            let data = try encoder.encode(records)
-            try data.write(to: url, options: [.atomic])
-        } catch {
-            NSLog("[UsageStore] Failed to persist usage: \(error)")
+    private func persistAsync(records: [TranscriptionRecord]) {
+        let destinationURL = url
+        Task.detached(priority: .utility) {
+            do {
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = [.prettyPrinted]
+                let data = try encoder.encode(records)
+                try data.write(to: destinationURL, options: [.atomic])
+            } catch {
+                NSLog("[UsageStore] Failed to persist usage: \(error)")
+            }
         }
     }
 }

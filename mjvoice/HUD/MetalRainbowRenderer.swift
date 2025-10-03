@@ -29,8 +29,8 @@ final class MetalRainbowRenderer: NSObject {
 
     var audioLevel: Float = 0
     var rippleDuration: CFTimeInterval = 1.0
-    var rippleStrength: Float = 0.22
-    var rippleWidth: Float = 0.18
+    var rippleStrength: Float = 0.18
+    var rippleWidth: Float = 0.14
 
     init(mtkView: MTKView) throws {
         guard let device = MTLCreateSystemDefaultDevice() else {

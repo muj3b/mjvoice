@@ -15,7 +15,6 @@
 		0A4569CABD3C03E0EC64891F /* WhisperEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 473B57A339C3D99DB05F27A0 /* WhisperEngine.swift */; };
 		0A6232021C51053D785AFB57 /* DictationOverlayState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11E7B2031C4228989D4B420B /* DictationOverlayState.swift */; };
 		19321D1444094E2FD648D007 /* LLMService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 369F047746961F27B8E7087C /* LLMService.swift */; };
-		1B9B071E16ECB8DD611C71C0 /* OverlayFeatureViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2CC4A31D8C9858A7107350D /* OverlayFeatureViews.swift */; };
 		1EAAD8CA7464415A771DD88B /* ggml-whisper-tiny.bin in Resources */ = {isa = PBXBuildFile; fileRef = D3E9F6DBBBAE5162B66F3B3E /* ggml-whisper-tiny.bin */; };
 		20B4BA7D48CC80820CA6B282 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CD901DFD9D471C49B68B3E5 /* AppDelegate.swift */; };
 		2588637DD020DA22F48D5526 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB45C928EF4F98BC02779837 /* main.swift */; };
@@ -138,7 +137,6 @@
 		DD188581E00E56075AE4EE4D /* AudioVADService.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AudioVADService.entitlements; sourceTree = "<group>"; };
 		DFB76C36329A726CC26D340B /* fluid-pro.onnx */ = {isa = PBXFileReference; path = "fluid-pro.onnx"; sourceTree = "<group>"; };
 		E0A664043E7CA1689B328676 /* silero-vad-unified-256ms-v6.0.0.mlmodelc */ = {isa = PBXFileReference; path = "silero-vad-unified-256ms-v6.0.0.mlmodelc"; sourceTree = "<group>"; };
-		E2CC4A31D8C9858A7107350D /* OverlayFeatureViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayFeatureViews.swift; sourceTree = "<group>"; };
 		E7AC6518A755DDC51D1D4256 /* FluidEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FluidEngine.swift; sourceTree = "<group>"; };
 		EE37540014BA31BA1B03F0CA /* SpeechRecognitionEngineApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognitionEngineApp.swift; sourceTree = "<group>"; };
 		EE484BCCB9608934E4998076 /* DictationOverlayWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictationOverlayWindow.swift; sourceTree = "<group>"; };
@@ -208,7 +206,6 @@
 				8F9B9765F933F79E2D58A720 /* HotkeyFormatter.swift */,
 				DB08E647F16F493A4809521A /* MetalRainbowOverlayView.swift */,
 				A1D2094199D94E2F2E7BE61B /* MetalRainbowRenderer.swift */,
-				E2CC4A31D8C9858A7107350D /* OverlayFeatureViews.swift */,
 				E74D9DB9F90F9584647D4A14 /* Shaders */,
 			);
 			path = HUD;
@@ -559,7 +556,6 @@
 				8A2501B1E9AAC9627DBA48EF /* ModelManager.swift in Sources */,
 				E63AF0CEC5E744E8D8F9DE39 /* NotesWindow.swift in Sources */,
 				744DBAFB9323DDA00F0BB5AC /* OnboardingView.swift in Sources */,
-				1B9B071E16ECB8DD611C71C0 /* OverlayFeatureViews.swift in Sources */,
 				A94D23169C382A6DC045818C /* PerformanceMetrics.swift in Sources */,
 				0319095324EB99B0317C7E7A /* Preferences.swift in Sources */,
 				0871815E4793491ECB05EBED /* PreferencesView.swift in Sources */,

@@ -20,7 +20,8 @@ public final class BatteryThermalMonitor: ObservableObject {
     private func update() {
         thermalState = ProcessInfo.processInfo.thermalState
         let blob = IOPSCopyPowerSourcesInfo().takeRetainedValue()
-        if let sources = IOPSCopyPowerSourcesList(blob).takeRetainedValue() as? [CFTypeRef], let source = sources.first {
+        let sources = IOPSCopyPowerSourcesList(blob).takeRetainedValue() as NSArray
+        if let source = sources.firstObject as CFTypeRef? {
             if let desc = IOPSGetPowerSourceDescription(blob, source).takeUnretainedValue() as? [String: Any] {
                 if let ps = desc[kIOPSPowerSourceStateKey as String] as? String {
                     onBattery = ps == kIOPSBatteryPowerValue

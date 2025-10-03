@@ -1,5 +1,6 @@
 import SwiftUI
 import MetalKit
+import AppKit
 
 struct MetalRainbowOverlayView: NSViewRepresentable {
     var audioLevel: CGFloat
@@ -18,8 +19,8 @@ struct MetalRainbowOverlayView: NSViewRepresentable {
         view.isPaused = false
         view.framebufferOnly = false
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.isOpaque = false
         view.layer?.isOpaque = false
+        view.layer?.backgroundColor = NSColor.clear.cgColor
 
         do {
             let renderer = try MetalRainbowRenderer(mtkView: view)
@@ -41,17 +42,17 @@ struct MetalRainbowOverlayView: NSViewRepresentable {
 
         switch state {
         case .listening:
-            renderer.rippleStrength = 0.24
-            renderer.rippleDuration = 1.1
-        case .thinking, .inserting:
-            renderer.rippleStrength = 0.16
-            renderer.rippleDuration = 0.9
-        case .error:
-            renderer.rippleStrength = 0.3
-            renderer.rippleDuration = 1.2
-        case .idle:
             renderer.rippleStrength = 0.18
-            renderer.rippleDuration = 1.0
+            renderer.rippleDuration = 1.15
+        case .thinking, .inserting:
+            renderer.rippleStrength = 0.12
+            renderer.rippleDuration = 0.95
+        case .error:
+            renderer.rippleStrength = 0.26
+            renderer.rippleDuration = 1.25
+        case .idle:
+            renderer.rippleStrength = 0.14
+            renderer.rippleDuration = 1.05
         }
 
         if context.coordinator.lastRippleTrigger != rippleTrigger {
