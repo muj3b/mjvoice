@@ -76,7 +76,7 @@ enum ModelManagerError: LocalizedError {
     }
 }
 
-final class ModelManager: NSObject {
+final class ModelManager: NSObject, @unchecked Sendable {
     static let shared = ModelManager()
     static let modelsDidChangeNotification = Notification.Name("ModelManagerModelsDidChange")
 
@@ -98,6 +98,7 @@ final class ModelManager: NSObject {
         var currentBytesWritten: Int64 = 0
         var currentBytesExpected: Int64 = 0
         var totalComponentCount: Int { components.count }
+        var triedMirror: Bool = false
 
         init(descriptor: ModelDescriptor,
              components: [ModelComponent],
@@ -422,6 +423,14 @@ final class ModelManager: NSObject {
             return nil
         }
     }
+    
+    private func mirrorURL(for url: URL) -> URL? {
+        // Simple mirror for Hugging Face URLs
+        guard url.host?.contains("huggingface.co") == true else { return nil }
+        var comps = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        comps?.host = "hf-mirror.com"
+        return comps?.url
+    }
 }
 
 extension ModelManager: URLSessionDownloadDelegate {
@@ -469,6 +478,16 @@ extension ModelManager: URLSessionDownloadDelegate {
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         if let error {
             if let context = queue.sync(execute: { activeDownloads.removeValue(forKey: task.taskIdentifier) }) {
+                if let original = (task.originalRequest?.url) {
+                    if !context.triedMirror, let alt = mirrorURL(for: original) {
+                        // Retry this component with the mirror
+                        context.triedMirror = true
+                        let newTask = self.session.downloadTask(with: alt)
+                        self.queue.sync { self.activeDownloads[newTask.taskIdentifier] = context }
+                        newTask.resume()
+                        return
+                    }
+                }
                 finalize(context: context, result: .failure(error))
             }
         }
@@ -619,3 +638,4 @@ private enum ModelCatalog {
         }
     }
 }
+

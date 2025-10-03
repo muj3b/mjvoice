@@ -47,7 +47,7 @@ final class AudioEngine: NSObject {
         }
         do {
             try engine.start()
-            NotificationCenter.default.post(name: .hudStateChanged, object: MicHUDView.State.listening)
+            NotificationCenter.default.post(name: .hudStateChanged, object: DictationOverlayState.listening)
         } catch {
             NSLog("[AudioEngine] Failed to start: \(error)")
         }
@@ -61,7 +61,7 @@ final class AudioEngine: NSObject {
         running = false
         engine.inputNode.removeTap(onBus: converterBus)
         engine.stop()
-        NotificationCenter.default.post(name: .hudStateChanged, object: MicHUDView.State.thinking)
+        NotificationCenter.default.post(name: .hudStateChanged, object: DictationOverlayState.thinking)
         let start = sessionStart
         sessionStart = nil
         asr.endStream { text in
@@ -104,7 +104,7 @@ final class AudioEngine: NSObject {
                     }
                 }
             }
-            NotificationCenter.default.post(name: .hudStateChanged, object: MicHUDView.State.idle)
+            NotificationCenter.default.post(name: .hudStateChanged, object: DictationOverlayState.idle)
         }
     }
 
@@ -155,8 +155,13 @@ final class AudioEngine: NSObject {
         var sum: Float = 0
         vDSP_measqv(samples, 1, &sum, vDSP_Length(samples.count))
         let rms = sqrtf(sum)
-        let normalized = min(max(rms * 10, 0), 1)
-        return normalized
+        // Convert to dBFS, avoid log(0)
+        let db = 20 * log10f(max(rms, 1e-7))
+        // Map -60 dB .. 0 dB to 0 .. 1
+        let minDB: Float = -60
+        let maxDB: Float = 0
+        let normalized = (db - minDB) / (maxDB - minDB)
+        return min(max(normalized, 0), 1)
     }
 
     @objc private func onSecureInput(_ n: Notification) {

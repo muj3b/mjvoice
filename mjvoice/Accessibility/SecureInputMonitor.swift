@@ -27,12 +27,9 @@ final class SecureInputMonitor {
     }
 
     static func checkSecureInput() -> Bool {
-        var masterPort: mach_port_t = 0
-        let kerr = IOMasterPort(mach_port_t(MACH_PORT_NULL), &masterPort)
-        guard kerr == KERN_SUCCESS else { return false }
         let matching = IOServiceMatching("IOHIDSystem")
         var iterator: io_iterator_t = 0
-        guard IOServiceGetMatchingServices(masterPort, matching, &iterator) == KERN_SUCCESS else {
+        guard IOServiceGetMatchingServices(kIOMainPortDefault, matching, &iterator) == KERN_SUCCESS else {
             return false
         }
         var entry: io_object_t = IOIteratorNext(iterator)

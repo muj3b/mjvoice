@@ -1,4 +1,5 @@
 import AppKit
+import UserNotifications
 
 final class TextInserter {
     enum Outcome {
@@ -103,12 +104,23 @@ final class TextInserter {
     }
 
     private func notifyClipboardFallback() {
-        let notification = NSUserNotification()
-        notification.title = "Dictation copied to clipboard"
-        notification.informativeText = "mjvoice saved your transcript because no editable field was focused."
-        NSUserNotificationCenter.default.deliver(notification)
-        Task { @MainActor in
-            EventLogStore.shared.record(type: .clipboardFallback, message: "Transcript copied to clipboard")
+        let center = UNUserNotificationCenter.current()
+        // Request authorization if not already granted
+        center.requestAuthorization(options: [.alert, .sound]) { granted, _ in
+            guard granted else {
+                Task { @MainActor in
+                    EventLogStore.shared.record(type: .clipboardFallback, message: "Transcript copied to clipboard")
+                }
+                return
+            }
+            let content = UNMutableNotificationContent()
+            content.title = "Dictation copied to clipboard"
+            content.body = "mjvoice saved your transcript because no editable field was focused."
+            let request = UNNotificationRequest(identifier: "clipboard-fallback", content: content, trigger: nil)
+            center.add(request, withCompletionHandler: nil)
+            Task { @MainActor in
+                EventLogStore.shared.record(type: .clipboardFallback, message: "Transcript copied to clipboard")
+            }
         }
     }
 }

@@ -39,13 +39,30 @@ import CoreML
     private let modelInputSize = 4096 + VadState.contextLength
 
     private func loadModel() {
-        do {
-            let modelURL = URL(fileURLWithPath: "/Users/mujeb/mjvoice/Shared/Models/VAD/silero-vad-unified-256ms-v6.0.0.mlmodelc")
-            vadModel = try MLModel(contentsOf: modelURL)
-            print("VAD model loaded")
-        } catch {
-            print("Failed to load VAD model: \(error)")
+        guard let modelURL = resolveModelURL() else {
+            print("[AudioVADService] VAD model not found. XPC VAD will be disabled.")
+            return
         }
+        do {
+            vadModel = try MLModel(contentsOf: modelURL)
+            print("[AudioVADService] VAD model loaded: \(modelURL.lastPathComponent)")
+        } catch {
+            print("[AudioVADService] Failed to load VAD model: \(error)")
+        }
+    }
+    
+    private func resolveModelURL() -> URL? {
+        // 1) Try bundled resource
+        if let url = Bundle.main.url(forResource: "silero-vad-unified-256ms-v6.0.0", withExtension: "mlmodelc", subdirectory: "BundledModels/VAD") {
+            return url
+        }
+        // 2) Try Application Support directory
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let candidate = support.appendingPathComponent("mjvoice/Models/VAD/silero-vad-unified-256ms-v6.0.0.mlmodelc")
+        if FileManager.default.fileExists(atPath: candidate.path) {
+            return candidate
+        }
+        return nil
     }
 }
 

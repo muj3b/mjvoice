@@ -9,6 +9,7 @@ targets:
     platform: macOS
     sources:
       - path: mjvoice
+      - path: Shared/Models/DictationOverlayState.swift
       - path: Shared/Models/Preferences.swift
       - path: Shared/Models/VAD/silero-vad-unified-256ms-v6.0.0.mlmodelc
       - path: Shared/Resources
@@ -19,6 +20,7 @@ targets:
       - path: Shared/Utilities/EventLogStore.swift
       - path: Shared/Utilities/SnippetStore.swift
       - path: Shared/Utilities/FluidRuntimeInstaller.swift
+      - path: Shared/Utilities/VisualEffectView.swift
       - path: Shared/Utilities/UsageStore.swift
       - path: Shared/Utilities/TextFormatter.swift
       - path: Shared/Utilities/XPCConnectionFactory.swift

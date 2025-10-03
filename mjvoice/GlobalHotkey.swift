@@ -29,7 +29,7 @@ final class GlobalHotkeyManager {
         let mods = Self.modifiersFrom(hotkey.modifiers)
         let keyCode = Self.keyCodeFrom(name: hotkey.key)
         var hotKeyRef: EventHotKeyRef?
-        var hotKeyID = EventHotKeyID(signature: fourCharCode("mjvo"), id: 1)
+        let hotKeyID = EventHotKeyID(signature: fourCharCode("mjvo"), id: 1)
         let status = RegisterEventHotKey(keyCode, mods, hotKeyID, GetApplicationEventTarget(), 0, &hotKeyRef)
         if status == noErr {
             if let ref = hotKeyRef {
@@ -48,8 +48,8 @@ final class GlobalHotkeyManager {
             registerFnMonitor()
             return
         }
-        var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
-        var eventType2 = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyReleased))
+        let eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
+        let eventType2 = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyReleased))
         InstallEventHandler(GetApplicationEventTarget(), { (_, event, _) -> OSStatus in
             let kind = GetEventKind(event)
             if kind == UInt32(kEventHotKeyPressed) {
@@ -62,7 +62,7 @@ final class GlobalHotkeyManager {
         let modifiers = Self.modifiersFrom(prefs.hotkey.modifiers)
         let keyCode = Self.keyCodeFrom(name: prefs.hotkey.key)
 
-        var hotKeyID = EventHotKeyID(signature: fourCharCode("mjvo"), id: 1)
+        let hotKeyID = EventHotKeyID(signature: fourCharCode("mjvo"), id: 1)
         RegisterEventHotKey(keyCode, modifiers, hotKeyID, GetApplicationEventTarget(), 0, &hotKeyRef)
     }
 

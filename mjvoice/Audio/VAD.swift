@@ -7,9 +7,15 @@ final class VAD {
     private var speechCounter = 0
     
     private var connection: NSXPCConnection?
+    private var xpcAvailable = true
     private var proxy: AudioVADServiceProtocol? {
-        connection?.remoteObjectProxyWithErrorHandler { err in
+        guard xpcAvailable else { return nil }
+        return connection?.remoteObjectProxyWithErrorHandler { [weak self] err in
             NSLog("[VADClient] XPC error: \(err)")
+            // Disable XPC path after error
+            self?.xpcAvailable = false
+            self?.connection?.invalidate()
+            self?.connection = nil
         } as? AudioVADServiceProtocol
     }
     
@@ -18,33 +24,47 @@ final class VAD {
     }
     
     private func connect() {
-        if connection != nil { return }
+        if connection != nil || !xpcAvailable { return }
         let iface = NSXPCInterface(with: AudioVADServiceProtocol.self)
-        connection = XPCConnectionFactory.makeConnection(.vad, remoteInterface: iface)
+        let c = XPCConnectionFactory.makeConnection(.vad, remoteInterface: iface)
+        c.invalidationHandler = { [weak self] in
+            self?.xpcAvailable = false
+            self?.connection?.invalidate()
+            self?.connection = nil
+        }
+        c.interruptionHandler = { [weak self] in
+            self?.xpcAvailable = false
+            self?.connection?.invalidate()
+            self?.connection = nil
+        }
+        connection = c
     }
 
     func isSpeech(chunk: [Float]) -> Bool {
-        // If XPC connection is available, use Silero VAD
-        if let proxy = proxy {
+        // Try XPC VAD if available
+        if xpcAvailable, let proxy = proxy {
             var result = false
             let semaphore = DispatchSemaphore(value: 0)
+            var responded = false
             
-            // Convert Float array to Data
             var data = Data(count: chunk.count * MemoryLayout<Float>.size)
             data.withUnsafeMutableBytes { raw in
                 let dst = raw.bindMemory(to: Float.self)
                 _ = dst.initialize(from: chunk)
             }
             
-            // Call XPC service
             proxy.isSpeechPresent(in: data, sampleRate: 16000) { isSpeech in
                 result = isSpeech
+                responded = true
                 semaphore.signal()
             }
             
-            // Wait for response (with timeout)
-            _ = semaphore.wait(timeout: .now() + 0.1)
-            return result
+            if semaphore.wait(timeout: .now() + 0.15) == .timedOut || !responded {
+                // Timeout or failure: disable XPC VAD
+                xpcAvailable = false
+            } else {
+                return result
+            }
         }
         
         // Fallback to energy-based with zero-crossing heuristic

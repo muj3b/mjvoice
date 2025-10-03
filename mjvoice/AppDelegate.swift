@@ -9,8 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self?.dashboardController.show()
     })
     private var onboardingWindow: NSWindow?
-    private let hudWindow = MicHUDWindow()
-    private var hudFollowTimer: DispatchSourceTimer?
+    private let overlayWindow = DictationOverlayWindow()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
@@ -29,8 +28,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.addObserver(self, selector: #selector(onPTTStart), name: .pttStart, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(onPTTStop), name: .pttStop, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(onPTTToggle), name: .pttToggle, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(onHUDState(_:)), name: .hudStateChanged, object: nil)
-
         NSApp.activate(ignoringOtherApps: true)
     }
 
@@ -40,28 +37,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func onPTTStart() {
-        showHUD()
+        showOverlay()
         AudioEngine.shared.startPTT()
-        startHUDFollow()
     }
 
     @objc private func onPTTStop() {
         AudioEngine.shared.stopPTT()
-        stopHUDFollow()
     }
 
     @objc private func onPTTToggle() {
         if AudioEngine.shared.isRunning { AudioEngine.shared.stopPTT() }
         else { AudioEngine.shared.startPTT() }
-    }
-
-    @objc private func onHUDState(_ notification: Notification) {
-        guard let state = notification.object as? MicHUDView.State else { return }
-        if state == .idle && !AudioEngine.shared.isRunning {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                self.hudWindow.hide()
-            }
-        }
     }
 
     private func setupStatusItem() {
@@ -98,36 +84,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         dashboardController.show()
     }
 
-    private func showHUD() {
-        let mouse = NSEvent.mouseLocation
-        let targetScreen = NSScreen.screens.first(where: { NSMouseInRect(mouse, $0.frame, false) }) ?? NSScreen.main
-        guard let screen = targetScreen else { return }
-
-        let visible = screen.visibleFrame
-        let clampedX = min(max(mouse.x, visible.minX + 100), visible.maxX - 100)
-        let clampedY = min(max(mouse.y, visible.minY + 140), visible.maxY - 60)
-        let anchor = NSPoint(x: clampedX, y: clampedY)
-
-        hudWindow.show(anchoringTo: anchor, on: screen)
+    private func showOverlay() {
+        guard let screen = activeScreen() else { return }
+        overlayWindow.present(on: screen)
     }
 
-    private func startHUDFollow() {
-        hudFollowTimer?.cancel()
-        let timer = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
-        timer.schedule(deadline: .now() + .milliseconds(120), repeating: .milliseconds(120))
-        timer.setEventHandler { [weak self] in
-            guard let self, AudioEngine.shared.isRunning else { return }
-            let mouse = NSEvent.mouseLocation
-            let screen = NSScreen.screens.first(where: { NSMouseInRect(mouse, $0.frame, false) }) ?? NSScreen.main
-            guard let screen else { return }
-            self.hudWindow.show(anchoringTo: mouse, on: screen)
+    private func activeScreen() -> NSScreen? {
+        let mouseLocation = NSEvent.mouseLocation
+        if let screen = NSScreen.screens.first(where: { NSMouseInRect(mouseLocation, $0.frame, false) }) {
+            return screen
         }
-        timer.resume()
-        hudFollowTimer = timer
-    }
-
-    private func stopHUDFollow() {
-        hudFollowTimer?.cancel()
-        hudFollowTimer = nil
+        return NSScreen.main
     }
 }

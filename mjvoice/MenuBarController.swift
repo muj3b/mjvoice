@@ -7,6 +7,7 @@ final class MenuBarController {
     let menu: NSMenu = NSMenu()
 
     private var isPaused: Bool = false
+    private var engineMode: String = "Local"
     private let openDashboardHandler: () -> Void
     private let snippetStore = SnippetStore.shared
     private let usageStore = UsageStore.shared
@@ -27,6 +28,13 @@ final class MenuBarController {
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.rebuildMenu() }
             .store(in: &cancellables)
+        NotificationCenter.default.publisher(for: .asrEngineModeChanged)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] note in
+                if let mode = note.object as? String { self?.engineMode = mode }
+                self?.rebuildMenu()
+            }
+            .store(in: &cancellables)
     }
 
     private func rebuildMenu() {
@@ -40,6 +48,10 @@ final class MenuBarController {
         let offlineItem = NSMenuItem(title: offline ? "Offline Mode: On" : "Offline Mode: Off", action: #selector(toggleOffline), keyEquivalent: "")
         offlineItem.target = self
         menu.addItem(offlineItem)
+
+        let engineItem = NSMenuItem(title: "ASR Engine: \(engineMode)", action: nil, keyEquivalent: "")
+        engineItem.isEnabled = false
+        menu.addItem(engineItem)
 
         menu.addItem(NSMenuItem.separator())
         let startItem = NSMenuItem(title: "Start Dictation", action: #selector(startDictation), keyEquivalent: "")
@@ -150,7 +162,7 @@ final class MenuBarController {
 
     @objc private func openHelp() {
         openDashboardHandler()
-        NotificationCenter.default.post(name: .dashboardNavigate, object: DashboardItem.help.rawValue)
+        NotificationCenter.default.post(name: .dashboardNavigate, object: DashboardItem.support.rawValue)
     }
 
     @objc private func openSnippetManager() {
@@ -182,4 +194,8 @@ final class MenuBarController {
 extension Notification.Name {
     static let mjvoiceActiveChanged = Notification.Name("mjvoiceActiveChanged")
     static let mjvoiceOfflineModeChanged = Notification.Name("mjvoiceOfflineModeChanged")
+}
+
+extension Notification.Name {
+    static let asrEngineModeChanged = Notification.Name("asrEngineModeChanged")
 }

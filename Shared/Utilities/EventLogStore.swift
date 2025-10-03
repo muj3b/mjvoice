@@ -10,6 +10,7 @@ struct EventLogEntry: Identifiable, Codable {
         case noteCaptured
         case helpOpened
         case snippetCreated
+        case dictionaryImport
     }
 
     let id: UUID

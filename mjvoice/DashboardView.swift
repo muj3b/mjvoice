@@ -3,229 +3,333 @@ import AppKit
 import UniformTypeIdentifiers
 
 enum DashboardItem: String, Hashable, CaseIterable {
-    case home
-    case tone
+    case overview
+    case personalization
     case hotkeys
     case dictionary
     case snippets
     case notes
-    case notifications
-    case account
-    case help
+    case activity
+    case settings
+    case support
 }
 
 struct DashboardView: View {
-    @State private var selection: DashboardItem = .home
+    @State private var selection: DashboardItem = .overview
     @ObservedObject private var usage = UsageStore.shared
     @ObservedObject private var snippetStore = SnippetStore.shared
     @ObservedObject private var eventLog = EventLogStore.shared
     @State private var showingPreferences = false
-    @State private var customVocabulary = PreferencesStore.shared.current.customVocab.sorted()
-    @State private var newTerm: String = ""
     @State private var showingAddSnippet = false
     @State private var snippetTitle: String = ""
     @State private var snippetBody: String = ""
-    @State private var selectedNote: TranscriptionRecord?
+    @State private var vocabularySheet = false
+    @State private var customVocabulary = PreferencesStore.shared.current.customVocab.sorted()
+    @State private var newVocabularyTerm = ""
 
-    private var username: String {
+    private let gradientBackground = LinearGradient(colors: [Color(red: 0.09, green: 0.10, blue: 0.20), Color(red: 0.04, green: 0.06, blue: 0.11)], startPoint: .topLeading, endPoint: .bottomTrailing)
+
+    private var greeting: String {
         let full = NSFullUserName()
         if !full.isEmpty {
             return full.split(separator: " ").first.map(String.init) ?? full
         }
         let user = NSUserName()
-        return user.isEmpty ? "Friend" : user
+        return user.isEmpty ? "Guest" : user
     }
 
     var body: some View {
-        HStack(spacing: 0) {
-            sidebar
-            Divider()
-            content
+        ZStack {
+            gradientBackground.ignoresSafeArea()
+            HStack(spacing: 0) {
+                sidebar
+                Divider().background(Color.white.opacity(0.1))
+                content
+            }
+            .frame(minHeight: 680)
         }
-        .frame(minWidth: 1024, minHeight: 640)
-        .background(Color(nsColor: .windowBackgroundColor))
         .sheet(isPresented: $showingPreferences) {
-            PreferencesView()
-                .frame(width: 560)
+            PreferencesView().frame(width: 560)
         }
-        .sheet(isPresented: $showingAddSnippet) {
-            snippetComposer
-                .frame(width: 420, height: 320)
-        }
-        .onAppear { refreshVocabulary() }
+        .sheet(isPresented: $showingAddSnippet) { snippetComposer }
+        .sheet(isPresented: $vocabularySheet) { vocabularyComposer }
         .onReceive(NotificationCenter.default.publisher(for: .dashboardNavigate)) { note in
-            if let raw = note.object as? String, let item = DashboardItem(rawValue: raw) {
-                selection = item
+            if let raw = note.object as? String, let destination = DashboardItem(rawValue: raw) {
+                selection = destination
+            }
+        }
+        .onAppear(perform: refreshVocabulary)
+    }
+
+    // MARK: - Sidebar
+
+    private var sidebar: some View {
+        VStack(spacing: 28) {
+            headerBadge
+            VStack(alignment: .leading, spacing: 12) {
+                ForEach(primaryEntries) { entry in
+                    SidebarButton(entry: entry, selection: $selection)
+                }
+            }
+            Divider().background(Color.white.opacity(0.12))
+            VStack(alignment: .leading, spacing: 12) {
+                ForEach(secondaryEntries) { entry in
+                    SidebarButton(entry: entry, selection: $selection)
+                }
+            }
+            Spacer()
+            VStack(alignment: .leading, spacing: 10) {
+                SidebarLink(title: "Invite collaborators", systemImage: "person.2.badge.gear") {
+                    openURL("https://mjvoice.app/invite")
+                }
+                SidebarLink(title: "Activate Pro trial", systemImage: "sparkles") {
+                    openURL("https://mjvoice.app/pro")
+                }
+            }
+            .padding(.bottom, 24)
+        }
+        .padding(.vertical, 36)
+        .padding(.horizontal, 26)
+        .frame(width: 260)
+        .background(
+            RoundedRectangle(cornerRadius: 32, style: .continuous)
+                .fill(Color.white.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 32, style: .continuous)
+                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                )
+                .padding(.vertical, 20)
+        )
+    }
+
+    private var headerBadge: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                Circle().fill(Color.white.opacity(0.18)).frame(width: 38, height: 38)
+                Text("MJ")
+                    .font(.system(size: 15, weight: .black, design: .rounded))
+                    .foregroundStyle(Color.white)
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                Text("mjvoice")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Color.white)
+                Text("Everywhere dictation")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Color.white.opacity(0.6))
             }
         }
     }
 
-    private var sidebar: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("mjvoice")
-                    .font(.title2).bold()
-                Text("Basic")
-                    .font(.caption)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(.ultraThinMaterial, in: Capsule())
-            }
-            .padding(.horizontal, 20)
-            List(selection: $selection) {
-                Section {
-                    SidebarRow(icon: "house.fill", title: "Home", item: .home, selection: $selection)
-                    SidebarDisclosure(title: "Personalization", icon: "slider.horizontal.3", selection: $selection) {
-                        SidebarRow(icon: "sparkles", title: "Tone", item: .tone, selection: $selection)
-                        SidebarRow(icon: "keyboard", title: "Hotkeys", item: .hotkeys, selection: $selection)
-                    }
-                    SidebarRow(icon: "text.book.closed", title: "Dictionary", item: .dictionary, selection: $selection)
-                    SidebarRow(icon: "note.text", title: "Snippets", item: .snippets, selection: $selection)
-                    SidebarRow(icon: "square.and.pencil", title: "Notes", item: .notes, selection: $selection)
-                }
-                Section {
-                    SidebarCTA(title: "Try mjvoice Pro", subtitle: "Unlock unlimited dictation", icon: "sparkles")
-                    SidebarLink(title: "Invite teammates", icon: "person.badge.plus")
-                    SidebarLink(title: "Get 2 free months", icon: "gift")
-                    SidebarRow(icon: "gearshape.fill", title: "Settings", item: .account, selection: $selection)
-                    SidebarRow(icon: "bell", title: "Notifications", item: .notifications, selection: $selection)
-                    SidebarRow(icon: "questionmark.circle", title: "Help", item: .help, selection: $selection)
-                }
-            }
-            .listStyle(.sidebar)
-        }
-        .frame(width: 240)
-        .background(Color(nsColor: .underPageBackgroundColor))
+    private var primaryEntries: [SidebarEntry] {
+        [
+            SidebarEntry(icon: "rectangle.grid.2x2", label: "Overview", item: .overview),
+            SidebarEntry(icon: "slider.horizontal.3", label: "Personalization", item: .personalization),
+            SidebarEntry(icon: "keyboard", label: "Hotkeys", item: .hotkeys),
+            SidebarEntry(icon: "character.book.closed", label: "Dictionary", item: .dictionary),
+            SidebarEntry(icon: "text.badge.plus", label: "Snippets", item: .snippets),
+            SidebarEntry(icon: "note.text", label: "Notes", item: .notes)
+        ]
     }
+
+    private var secondaryEntries: [SidebarEntry] {
+        [
+            SidebarEntry(icon: "waveform.path.ecg", label: "Activity", item: .activity),
+            SidebarEntry(icon: "gearshape", label: "Settings", item: .settings),
+            SidebarEntry(icon: "questionmark.circle", label: "Support", item: .support)
+        ]
+    }
+
+    // MARK: - Content
 
     @ViewBuilder
     private var content: some View {
         switch selection {
-        case .home:
-            homeView
-        case .tone:
-            personalizationView
+        case .overview:
+            overviewTab
+        case .personalization:
+            personalizationTab
         case .hotkeys:
-            hotkeysView
+            hotkeysTab
         case .dictionary:
-            dictionaryView
+            dictionaryTab
         case .snippets:
-            snippetsView
+            snippetsTab
         case .notes:
-            notesView
-        case .notifications:
-            notificationsView
-        case .account:
-            accountView
-        case .help:
-            helpView
+            notesTab
+        case .activity:
+            activityTab
+        case .settings:
+            settingsTab
+        case .support:
+            supportTab
         }
     }
 
-    private var homeView: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                HStack(alignment: .center) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Welcome back, \(username)")
-                            .font(.largeTitle).bold()
-                        HStack(spacing: 16) {
-                            Label("\(usage.weeklyStreak) weeks", systemImage: "flame.fill")
-                            Label("\(usage.totalWords.formatted()) words", systemImage: "chart.line.uptrend.xyaxis")
-                            Label(String(format: "%.0f WPM", usage.averageWPM), systemImage: "trophy.fill")
-                        }
-                        .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Button("Open Preferences") { showingPreferences = true }
-                        .buttonStyle(.borderedProminent)
-                }
-                promotionalCard
-                historySection
+    private var overviewTab: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 30) {
+                overviewHeader
+                statCards
+                quickActions
+                recentSessions
             }
-            .padding(32)
+            .padding(.vertical, 36)
+            .padding(.horizontal, 30)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.white.opacity(0.04))
     }
 
-    private var personalizationView: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Personalization")
-                .font(.title)
-            Text("Adjust tone presets, grammar rules, and per-app behaviors.")
-                .foregroundStyle(.secondary)
-            Button("Open Preferences") { showingPreferences = true }
+    private var overviewHeader: some View {
+        HStack(alignment: .center) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Good to see you, \(greeting)")
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color.white)
+                Text("Keep capturing ideas and let mjvoice handle the busywork.")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(Color.white.opacity(0.65))
+            }
             Spacer()
+            Button {
+                showingPreferences = true
+            } label: {
+                Label("Preferences", systemImage: "slider.horizontal.3")
+                    .font(.system(size: 14, weight: .semibold))
+            }
+            .buttonStyle(GlowButtonStyle(color: Color.white))
         }
-        .padding(32)
     }
 
-    private var hotkeysView: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Hotkeys")
-                .font(.title)
-            Text("Change your push-to-talk shortcut and choose between press-and-hold, latch, or toggle modes.")
-                .foregroundStyle(.secondary)
-            Button("Open Preferences") { showingPreferences = true }
-            Spacer()
+    private var statCards: some View {
+        let streak = usage.weeklyStreak
+        let wordCount = usage.totalWords
+        let average = usage.averageWPM
+        return LazyVGrid(columns: adaptiveColumns, spacing: 20) {
+            MetricCard(icon: "flame", accent: .orange, title: "Weekly streak", value: streak.description, detail: streak == 1 ? "Week active" : "Weeks active")
+            MetricCard(icon: "character.cursor.ibeam", accent: .cyan, title: "Words captured", value: wordCount.formatted(.number.grouping(.automatic)), detail: "Total across sessions")
+            MetricCard(icon: "speedometer", accent: .pink, title: "Average pace", value: String(format: "%.0f", average), detail: "Words per minute")
         }
-        .padding(32)
     }
 
-    private var dictionaryView: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                VStack(alignment: .leading) {
-                    Text("Custom Dictionary")
-                        .font(.title)
-                    Text("Terms are used to bias the transcription engine and reduce spelling mistakes.")
-                        .foregroundStyle(.secondary)
+    private var adaptiveColumns: [GridItem] {
+        [GridItem(.adaptive(minimum: 240), spacing: 18, alignment: .top)]
+    }
+
+    private var quickActions: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            Text("Quick actions")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(Color.white.opacity(0.9))
+            LazyVGrid(columns: adaptiveColumns, spacing: 16) {
+                ActionTile(title: "Install Fluid runtime", subtitle: "Enable Fluid ASR locally", icon: "shippingbox", color: .purple) {
+                    PreferencesWindowController.shared.show()
+                    NotificationCenter.default.post(name: .dashboardNavigate, object: DashboardItem.settings.rawValue)
                 }
+                ActionTile(title: "Launch Notes scratchpad", subtitle: "Drop ideas into the persistent window", icon: "square.and.pencil", color: .cyan) {
+                    NotesWindow.shared.makeKeyAndOrderFront(nil)
+                }
+                ActionTile(title: "View release notes", subtitle: "Catch up on the latest improvements", icon: "sparkle.magnifyingglass", color: .orange) {
+                    openURL("https://mjvoice.app/changelog")
+                }
+            }
+        }
+    }
+
+    private var recentSessions: some View {
+        let groups = usage.groupedHistory().prefix(3)
+        return VStack(alignment: .leading, spacing: 18) {
+            HStack {
+                Text("Recent sessions")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(Color.white.opacity(0.9))
                 Spacer()
-                Button(action: importVocabulary) {
-                    Label("Import CSV", systemImage: "square.and.arrow.down")
+            }
+            if groups.isEmpty {
+                EmptyTimelineView()
+            } else {
+                LazyVStack(alignment: .leading, spacing: 16) {
+                    ForEach(Array(groups), id: \.date) { group in
+                        TimelineGroup(date: group.date, records: group.records.prefix(3))
+                    }
                 }
             }
+        }
+    }
+
+    // MARK: - Other tabs (brief unique layouts)
+
+    private var personalizationTab: some View {
+        InfoCalloutView(
+            title: "Personalization",
+            message: "Tune tone, grammar preferences, and per-app behaviours inside Preferences.",
+            buttonTitle: "Open Preferences"
+        ) {
+            showingPreferences = true
+        }
+    }
+
+    private var hotkeysTab: some View {
+        InfoCalloutView(
+            title: "Hotkeys",
+            message: "Switch between press-to-talk modes, set dedicated shortcuts, and preview focus management.",
+            buttonTitle: "Configure Hotkeys"
+        ) {
+            showingPreferences = true
+        }
+    }
+
+    private var dictionaryTab: some View {
+        VStack(alignment: .leading, spacing: 18) {
             HStack {
-                TextField("Add new term", text: $newTerm)
-                    .textFieldStyle(.roundedBorder)
-                    .onSubmit(addVocabularyTerm)
-                Button("Add", action: addVocabularyTerm)
-                    .buttonStyle(.bordered)
+                Text("Custom dictionary")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundStyle(Color.white)
+                Spacer()
+                Button("Import CSV") {
+                    vocabularySheet = true
+                }
+                .buttonStyle(GlowButtonStyle(color: .white))
             }
+            Text("Add preferred spellings and domain-specific jargon to bias the recogniser.")
+                .foregroundStyle(Color.white.opacity(0.65))
             List {
                 ForEach(customVocabulary, id: \.self) { term in
                     HStack {
                         Text(term)
                         Spacer()
-                        Button(role: .destructive) {
-                            removeVocabularyTerm(term)
-                        } label: {
+                        Button(role: .destructive) { removeVocabularyTerm(term) } label: {
                             Image(systemName: "trash")
                         }
-                        .buttonStyle(.borderless)
+                        .buttonStyle(.plain)
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, 6)
                 }
             }
+            .frame(maxHeight: 360)
         }
-        .padding(32)
+        .padding(30)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.white.opacity(0.04))
     }
 
-    private var snippetsView: some View {
-        VStack(alignment: .leading, spacing: 16) {
+    private var snippetsTab: some View {
+        VStack(alignment: .leading, spacing: 18) {
             HStack {
                 Text("Snippets")
-                    .font(.title)
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundStyle(Color.white)
                 Spacer()
                 Button {
                     showingAddSnippet = true
                 } label: {
-                    Label("New Snippet", systemImage: "plus")
+                    Label("New", systemImage: "plus")
                 }
+                .buttonStyle(GlowButtonStyle(color: .white))
             }
-            Text("Save templated responses and insert them with a single click.")
-                .foregroundStyle(.secondary)
-
+            Text("Reusable phrases and responses.")
+                .foregroundStyle(Color.white.opacity(0.7))
             List {
                 ForEach(snippetStore.snippets) { snippet in
                     VStack(alignment: .leading, spacing: 6) {
@@ -236,387 +340,54 @@ struct DashboardView: View {
                             if let last = snippet.lastUsedAt {
                                 Text("Used " + last.relativeDescription())
                                     .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(Color.secondary)
                             }
                         }
                         Text(snippet.content)
                             .font(.body)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.secondary)
                             .lineLimit(3)
-
                         HStack {
-                            Button {
-                                insertSnippet(snippet)
-                            } label: {
-                                Label("Insert", systemImage: "text.insert")
-                            }
-                            Button {
-                                copySnippet(snippet)
-                            } label: {
-                                Label("Copy", systemImage: "doc.on.doc")
-                            }
-                            Button(role: .destructive) {
-                                snippetStore.remove(snippet)
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
-                            .buttonStyle(.borderless)
+                            Button("Insert") { insertSnippet(snippet) }
+                            Button("Copy") { copySnippet(snippet) }
+                            Button(role: .destructive) { snippetStore.remove(snippet) } label: { Text("Remove") }
                         }
+                        .buttonStyle(.bordered)
                     }
                     .padding(.vertical, 6)
                 }
             }
         }
-        .padding(32)
+        .padding(30)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.white.opacity(0.04))
     }
 
-    private var notesView: some View {
-        let noteGroups = usage.groupedHistory().map { (date: $0.date, records: $0.records.filter { $0.destination == .notes }) }.filter { !$0.records.isEmpty }
-        return VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Notes")
-                    .font(.title)
-                Spacer()
-                Button {
-                    NotesWindow.shared.makeKeyAndOrderFront(nil)
-                } label: {
-                    Label("Open Scratchpad", systemImage: "square.and.pencil")
-                }
-            }
-            Text("Dictation sessions captured in Notes mode are stored here.")
-                .foregroundStyle(.secondary)
-
-            if noteGroups.isEmpty {
-                Spacer()
-                EmptyStateView(title: "No notes yet", systemImage: "note.text", message: "Hold your hotkey and switch to Notes mode to start collecting ideas.")
-                Spacer()
-            } else {
-                List {
-                    ForEach(noteGroups, id: \.date) { group in
-                        Section(header: Text(group.date, style: .date)) {
-                            ForEach(group.records) { record in
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Text(record.timestamp, style: .time)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                    Text(record.text)
-                                        .font(.body)
-                                    HStack {
-                                        Button("Copy") { copyToPasteboard(record.text) }
-                                        Button("Open in Notes") {
-                                            NotesWindow.shared.makeKeyAndOrderFront(nil)
-                                            NotesWindow.shared.append(text: "\n---\n" + record.text)
-                                        }
-                                    }
-                                    .buttonStyle(.bordered)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        .padding(32)
+    private var notesTab: some View {
+        NotesOverviewView()
     }
 
-    private var notificationsView: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Activity")
-                    .font(.title)
-                Spacer()
-                Button("Mark all read") { eventLog.markAllRead() }
-                    .disabled(eventLog.entries.allSatisfy { $0.isRead })
-            }
-            Text("mjvoice keeps a local audit trail for clipboard fallbacks, downloads, and snippet actions.")
-                .foregroundStyle(.secondary)
-
-            if eventLog.entries.isEmpty {
-                Spacer()
-                EmptyStateView(title: "No activity yet", systemImage: "bell.slash", message: "You'll see recent events here once you start dictating.")
-                Spacer()
-            } else {
-                List(eventLog.entries) { entry in
-                    HStack(alignment: .top, spacing: 12) {
-                        Image(systemName: icon(for: entry.type))
-                            .foregroundStyle(color(for: entry.type))
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(entry.message)
-                            Text(entry.date.relativeDescription())
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                    }
-                    .padding(.vertical, 4)
-                    .opacity(entry.isRead ? 0.5 : 1)
-                }
-            }
-        }
-        .padding(32)
+    private var activityTab: some View {
+        ActivityView(eventLog: eventLog)
     }
 
-    private var accountView: some View {
-        let prefs = PreferencesStore.shared.current
-        return VStack(alignment: .leading, spacing: 16) {
-            Text("Account & Settings")
-                .font(.title)
-            Form {
-                LabeledContent("Mode") { Text(prefs.defaultMode.rawValue.capitalized) }
-                LabeledContent("PTT") { Text(prefs.pttMode.rawValue) }
-                LabeledContent("ASR Model") {
-                    Text(modelSummary(for: prefs))
-                }
-                LabeledContent("Noise Model") {
-                    Text(prefs.selectedNoiseModelID ?? prefs.noiseModel.rawValue)
-                }
-                LabeledContent("Offline Mode") { Text(prefs.offlineMode ? "Enabled" : "Disabled") }
-            }
-            Spacer()
-        }
-        .padding(32)
+    private var settingsTab: some View {
+        SettingsSnapshotView()
     }
 
-    private var helpView: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Help & Support")
-                .font(.title)
-            Text("Need a refresher? Open the guides, watch the quickstart, or contact mjvoice support.")
-                .foregroundStyle(.secondary)
-            VStack(alignment: .leading, spacing: 12) {
-                Button {
-                    openURL("https://docs.mjvoice.app/guide")
-                    EventLogStore.shared.record(type: .helpOpened, message: "Opened user guide")
-                } label: {
-                    Label("User Guide", systemImage: "book")
-                }
-                Button {
-                    openURL("https://docs.mjvoice.app/shortcuts")
-                    EventLogStore.shared.record(type: .helpOpened, message: "Viewed keyboard shortcuts")
-                } label: {
-                    Label("Keyboard Shortcuts", systemImage: "keyboard")
-                }
-                Button {
-                    openURL("mailto:support@mjvoice.app")
-                    EventLogStore.shared.record(type: .helpOpened, message: "Drafted support email")
-                } label: {
-                    Label("Email Support", systemImage: "envelope")
-                }
-            }
-            Spacer()
-        }
-        .padding(32)
+    private var supportTab: some View {
+        SupportView(openURL: openURL)
     }
 
-    private var promotionalCard: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Tag text anywhere")
-                    .font(.title3).bold()
-                Text("mjvoice automatically formats and inserts text with context-aware prompts.")
-                    .foregroundStyle(.secondary)
-                Button("Learn more") {}
-                    .buttonStyle(.borderedProminent)
-            }
-            Spacer()
-            Image(systemName: "text.magnifyingglass")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 120, height: 120)
-                .foregroundColor(.accentColor)
-                .padding()
-        }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(nsColor: .windowBackgroundColor).opacity(0.15))
-        )
-    }
+    // MARK: - Vocabulary helpers
 
-    private var historySection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Recent activity")
-                .font(.title2).bold()
-            if usage.transcriptions.isEmpty {
-                Text("Start dictating to see your history here.")
-                    .foregroundStyle(.secondary)
-            } else {
-                ForEach(usage.groupedHistory(), id: \.date) { group in
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(group.date, style: .date)
-                            .font(.headline)
-                        ForEach(group.records) { record in
-                            VStack(alignment: .leading, spacing: 4) {
-                                HStack {
-                                    Text(record.timestamp, style: .time)
-                                        .font(.subheadline)
-                                        .foregroundStyle(.secondary)
-                                    Spacer()
-                                    Text(String(format: "%.0f WPM", record.wpm))
-                                        .font(.subheadline)
-                                        .foregroundStyle(.secondary)
-                                }
-                                Text(record.text)
-                                    .lineLimit(3)
-                                HStack(spacing: 12) {
-                                    if let app = record.appName {
-                                        Label(app, systemImage: "app.dashed")
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                    Label("\(record.words) words", systemImage: "character.book.closed")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                    Label(record.destination.rawValue.capitalized, systemImage: "arrowshape.turn.up.right")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                            .padding()
-                            .background(RoundedRectangle(cornerRadius: 12).fill(Color(nsColor: .windowBackgroundColor).opacity(0.2)))
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-private struct SidebarRow: View {
-    let icon: String
-    let title: String
-    let item: DashboardItem
-    @Binding var selection: DashboardItem
-
-    var body: some View {
-        Button {
-            selection = item
-        } label: {
-            Label(title, systemImage: icon)
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-private struct SidebarDisclosure<Content: View>: View {
-    let title: String
-    let icon: String
-    @Binding var selection: DashboardItem
-    let content: Content
-    @State private var expanded = true
-
-    init(title: String, icon: String, selection: Binding<DashboardItem>, @ViewBuilder content: () -> Content) {
-        self.title = title
-        self.icon = icon
-        self._selection = selection
-        self.content = content()
-    }
-
-    var body: some View {
-        DisclosureGroup(isExpanded: $expanded) {
-            content
-                .padding(.leading, 8)
-        } label: {
-            Label(title, systemImage: icon)
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-private struct SidebarCTA: View {
-    let title: String
-    let subtitle: String
-    let icon: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: icon)
-                Text(title)
-                    .font(.headline)
-            }
-            Text(subtitle)
-                .font(.caption)
-            Button("Learn more") {}
-                .buttonStyle(.borderedProminent)
-        }
-        .padding()
-        .background(RoundedRectangle(cornerRadius: 12).fill(Color(nsColor: .windowBackgroundColor).opacity(0.2)))
-    }
-}
-
-private struct SidebarLink: View {
-    let title: String
-    let icon: String
-    var body: some View {
-        Button {
-            NotificationCenter.default.post(name: .dashboardNavigate, object: DashboardItem.help.rawValue)
-        } label: {
-            HStack {
-                Image(systemName: icon)
-                Text(title)
-            }
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-private struct EmptyStateView: View {
-    let title: String
-    let systemImage: String
-    let message: String
-
-    var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: systemImage)
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
-            Text(title)
-                .font(.title3)
-            Text(message)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: 300)
-        }
-        .padding()
-    }
-}
-
-private struct PlaceholderView: View {
-    let title: String
-    let message: String
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(title)
-                .font(.title)
-            Text(message)
-                .foregroundStyle(.secondary)
-            Spacer()
-        }
-        .padding(32)
-    }
-}
-
-extension DashboardView {
-    private func importVocabulary() {
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = true
-        panel.canChooseDirectories = false
-        panel.allowsMultipleSelection = false
-        panel.allowedContentTypes = [.commaSeparatedText, .plainText]
-        panel.begin { response in
-            guard response == .OK, let url = panel.url else { return }
-            let count = PreferencesStore.shared.importCustomVocab(from: url)
-            NSLog("[Dashboard] Imported \(count) custom vocabulary entries")
-            refreshVocabulary()
-        }
+    private func refreshVocabulary() {
+        customVocabulary = PreferencesStore.shared.current.customVocab.sorted()
     }
 
     private func addVocabularyTerm() {
-        let term = newTerm.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !term.isEmpty else { return }
-        PreferencesStore.shared.addCustomVocabularyTerm(term)
-        newTerm = ""
+        PreferencesStore.shared.addCustomVocabularyTerm(newVocabularyTerm)
+        newVocabularyTerm = ""
         refreshVocabulary()
     }
 
@@ -625,60 +396,418 @@ extension DashboardView {
         refreshVocabulary()
     }
 
-    private func refreshVocabulary() {
-        customVocabulary = PreferencesStore.shared.current.customVocab.sorted()
-    }
-
-    private var snippetComposer: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("New Snippet")
-                .font(.title2)
-            TextField("Title", text: $snippetTitle)
-            TextEditor(text: $snippetBody)
-                .frame(minHeight: 140)
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.secondary.opacity(0.2)))
-            HStack {
-                Spacer()
-                Button("Cancel") {
-                    showingAddSnippet = false
-                    snippetTitle = ""
-                    snippetBody = ""
-                }
-                Button("Save") {
-                    let title = snippetTitle.isEmpty ? "Snippet" : snippetTitle
-                    snippetStore.add(title: title, content: snippetBody)
-                    showingAddSnippet = false
-                    snippetTitle = ""
-                    snippetBody = ""
-                }
-                .disabled(snippetBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            }
-        }
-        .padding()
-    }
-
     private func insertSnippet(_ snippet: Snippet) {
-        let outcome = TextInserter.shared.insert(text: snippet.content)
         snippetStore.markUsed(snippet)
+        let outcome = TextInserter.shared.insert(text: snippet.content)
         if case .clipboard = outcome {
             EventLogStore.shared.record(type: .clipboardFallback, message: "Snippet copied to clipboard")
+        } else {
+            EventLogStore.shared.record(type: .snippetInserted, message: "Inserted snippet \(snippet.title)")
         }
     }
 
     private func copySnippet(_ snippet: Snippet) {
-        copyToPasteboard(snippet.content)
+        let pb = NSPasteboard.general
+        pb.clearContents()
+        pb.setString(snippet.content, forType: .string)
         snippetStore.markUsed(snippet)
+    }
+
+    private func openURL(_ string: String) {
+        guard let url = URL(string: string) else { return }
+        NSWorkspace.shared.open(url)
+    }
+
+    private var snippetComposer: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Create snippet")
+                .font(.title2).bold()
+            TextField("Title", text: $snippetTitle)
+            TextEditor(text: $snippetBody)
+                .frame(height: 150)
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.2)))
+            HStack {
+                Spacer()
+                Button("Cancel") { showingAddSnippet = false }
+                Button("Save") {
+                    snippetStore.add(title: snippetTitle, content: snippetBody)
+                    EventLogStore.shared.record(type: .snippetCreated, message: "Created snippet \(snippetTitle)")
+                    snippetTitle = ""
+                    snippetBody = ""
+                    showingAddSnippet = false
+                }
+                .disabled(snippetTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || snippetBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+        }
+        .padding()
+        .frame(width: 420)
+    }
+
+    private var vocabularyComposer: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Add vocabulary term")
+                .font(.title3).bold()
+            TextField("Term", text: $newVocabularyTerm)
+                .textFieldStyle(.roundedBorder)
+                .onSubmit(addVocabularyTerm)
+            HStack {
+                Spacer()
+                Button("Done") { vocabularySheet = false }
+                Button("Add") {
+                    addVocabularyTerm()
+                    EventLogStore.shared.record(type: .dictionaryImport, message: "Added \(newVocabularyTerm)")
+                }
+                .disabled(newVocabularyTerm.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+        }
+        .padding()
+        .frame(width: 360)
+    }
+}
+
+// MARK: - Reusable components
+
+private struct SidebarEntry: Identifiable {
+    let id = UUID()
+    let icon: String
+    let label: String
+    let item: DashboardItem
+}
+
+private struct SidebarButton: View {
+    let entry: SidebarEntry
+    @Binding var selection: DashboardItem
+
+    var isSelected: Bool { selection == entry.item }
+
+    var body: some View {
+        Button {
+            selection = entry.item
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: entry.icon)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(isSelected ? Color.black : Color.white.opacity(0.7))
+                    .frame(width: 28)
+                Text(entry.label)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(isSelected ? Color.black : Color.white.opacity(0.75))
+                Spacer()
+            }
+            .padding(.vertical, 8)
+            .padding(.horizontal, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(isSelected ? Color.white : Color.white.opacity(0.03))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(Color.white.opacity(isSelected ? 0.35 : 0.08), lineWidth: 1)
+            )
+            .shadow(color: isSelected ? Color.black.opacity(0.12) : .clear, radius: 10, y: 6)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct SidebarLink: View {
+    let title: String
+    let systemImage: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 15, weight: .medium))
+                Text(title)
+                    .font(.system(size: 13, weight: .semibold))
+                Spacer()
+                Image(systemName: "arrow.up.right")
+                    .font(.footnote)
+                    .opacity(0.4)
+            }
+            .foregroundStyle(Color.white.opacity(0.8))
+            .padding(.vertical, 8)
+            .padding(.horizontal, 12)
+            .background(Color.white.opacity(0.05))
+            .cornerRadius(12)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct GlowButtonStyle: ButtonStyle {
+    let color: Color
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .padding(.vertical, 10)
+            .padding(.horizontal, 16)
+            .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(color.opacity(configuration.isPressed ? 0.25 : 0.18)))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(color.opacity(configuration.isPressed ? 0.6 : 0.3), lineWidth: 1)
+            )
+            .foregroundStyle(Color.black)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .shadow(color: color.opacity(0.35), radius: configuration.isPressed ? 4 : 10, y: configuration.isPressed ? 3 : 8)
+    }
+}
+
+private struct MetricCard: View {
+    let icon: String
+    let accent: Color
+    let title: String
+    let value: String
+    let detail: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(accent.opacity(0.2))
+                    .frame(width: 44, height: 44)
+                Image(systemName: icon)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(accent)
+            }
+            Text(title.uppercased())
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color.white.opacity(0.6))
+            Text(value)
+                .font(.system(size: 26, weight: .bold, design: .rounded))
+                .foregroundStyle(Color.white)
+            Text(detail)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(Color.white.opacity(0.6))
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(Color.white.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                )
+        )
+    }
+}
+
+private struct ActionTile: View {
+    let title: String
+    let subtitle: String
+    let icon: String
+    let color: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundStyle(color)
+                    .padding(10)
+                    .background(color.opacity(0.18))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                Text(title)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Color.white)
+                Text(subtitle)
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color.white.opacity(0.65))
+            }
+            .padding(20)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(Color.white.opacity(0.04))
+                    .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(Color.white.opacity(0.08), lineWidth: 1))
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct TimelineGroup: View {
+    let date: Date
+    let records: ArraySlice<TranscriptionRecord>
+
+    private var label: String {
+        let calendar = Calendar.current
+        if calendar.isDateInToday(date) { return "Today" }
+        if calendar.isDateInYesterday(date) { return "Yesterday" }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE, MMM d"
+        return formatter.string(from: date)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(label.uppercased())
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color.white.opacity(0.6))
+            ForEach(records) { record in
+                TimelineEntry(record: record)
+            }
+        }
+    }
+}
+
+private struct TimelineEntry: View {
+    let record: TranscriptionRecord
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 18) {
+            Circle()
+                .fill(Color.white.opacity(0.25))
+                .frame(width: 10, height: 10)
+                .overlay(Circle().stroke(Color.white.opacity(0.4), lineWidth: 1))
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text(record.timestamp, style: .time)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Color.white.opacity(0.8))
+                    Spacer()
+                    if let app = record.appName ?? record.appBundleID {
+                        Text(app)
+                            .font(.system(size: 11, weight: .medium))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.white.opacity(0.08))
+                            .clipShape(Capsule())
+                    }
+                }
+                Text(record.text.trimmingCharacters(in: .whitespacesAndNewlines))
+                    .font(.system(size: 14))
+                    .foregroundStyle(Color.white.opacity(0.9))
+                    .lineLimit(4)
+                HStack(spacing: 16) {
+                    Label("\(record.words) words", systemImage: "character.cursor.ibeam")
+                    Label(String(format: "%.0f WPM", record.wpm), systemImage: "speedometer")
+                    Label(record.destination == .notes ? "Sent to Notes" : "Inserted", systemImage: "paperplane")
+                }
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color.white.opacity(0.6))
+            }
+        }
+        .padding(18)
+        .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Color.white.opacity(0.05)))
+        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Color.white.opacity(0.08), lineWidth: 1))
+    }
+}
+
+private struct EmptyTimelineView: View {
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "waveform.slash")
+                .font(.system(size: 32))
+                .foregroundStyle(Color.white.opacity(0.6))
+            Text("Capture your first dictation")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(Color.white)
+            Text("Hit your push-to-talk key to start logging sessions here.")
+                .font(.system(size: 12))
+                .foregroundStyle(Color.white.opacity(0.7))
+        }
+        .padding(40)
+        .frame(maxWidth: .infinity)
+        .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Color.white.opacity(0.05)))
+        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(Color.white.opacity(0.08), lineWidth: 1))
+    }
+}
+
+private struct InfoCalloutView: View {
+    let title: String
+    let message: String
+    let buttonTitle: String
+    let action: () -> Void
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text(title)
+                .font(.system(size: 26, weight: .bold))
+                .foregroundStyle(Color.white)
+            Text(message)
+                .font(.system(size: 14))
+                .foregroundStyle(Color.white.opacity(0.7))
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 360)
+            Button(buttonTitle, action: action)
+                .buttonStyle(GlowButtonStyle(color: .white))
+        }
+        .padding(40)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.white.opacity(0.04))
+    }
+}
+
+private struct NotesOverviewView: View {
+    var body: some View {
+        InfoCalloutView(
+            title: "Notes scratchpad",
+            message: "Notes mode delivers uninterrupted writing. Open the floating scratchpad to capture freeform text while dictating.",
+            buttonTitle: "Open Notes"
+        ) {
+            NotesWindow.shared.makeKeyAndOrderFront(nil)
+        }
+    }
+}
+
+private struct ActivityView: View {
+    @ObservedObject var eventLog: EventLogStore
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack {
+                Text("Activity feed")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundStyle(Color.white)
+                Spacer()
+                Button("Mark all read") { eventLog.markAllRead() }
+                    .buttonStyle(GlowButtonStyle(color: .white))
+                    .disabled(eventLog.entries.allSatisfy { $0.isRead })
+            }
+            if eventLog.entries.isEmpty {
+                EmptyTimelineView()
+            } else {
+                List(eventLog.entries) { entry in
+                    HStack(spacing: 16) {
+                        Image(systemName: icon(for: entry.type))
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(color(for: entry.type))
+                            .frame(width: 28)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(entry.message)
+                                .font(.system(size: 13, weight: .medium))
+                            Text(entry.date.relativeDescription())
+                                .font(.system(size: 11))
+                                .foregroundStyle(Color.secondary)
+                        }
+                        Spacer()
+                    }
+                    .padding(.vertical, 6)
+                    .opacity(entry.isRead ? 0.45 : 1.0)
+                }
+                .scrollContentBackground(.hidden)
+                .frame(maxHeight: 420)
+            }
+        }
+        .padding(30)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.white.opacity(0.04))
     }
 
     private func icon(for type: EventLogEntry.EventType) -> String {
         switch type {
-        case .clipboardFallback: return "doc.on.clipboard"
+        case .clipboardFallback: return "doc.on.doc"
         case .modelDownload: return "arrow.down.circle"
         case .modelDownloadFailed: return "exclamationmark.triangle"
-        case .snippetCreated: return "plus.square.on.square"
-        case .snippetInserted: return "text.insert"
-        case .noteCaptured: return "note.text"
+        case .noteCaptured: return "square.and.pencil"
         case .helpOpened: return "questionmark.circle"
+        case .snippetInserted: return "text.badge.checkmark"
+        case .snippetCreated: return "star"
+        case .dictionaryImport: return "tray.and.arrow.down"
         }
     }
 
@@ -687,37 +816,119 @@ extension DashboardView {
         case .clipboardFallback: return .blue
         case .modelDownload: return .green
         case .modelDownloadFailed: return .red
-        case .snippetCreated: return .purple
-        case .snippetInserted: return .purple
         case .noteCaptured: return .orange
-        case .helpOpened: return .mint
+        case .helpOpened: return .purple
+        case .snippetInserted: return .teal
+        case .snippetCreated: return .yellow
+        case .dictionaryImport: return .pink
         }
     }
+}
 
-    private func modelSummary(for prefs: UserPreferences) -> String {
-        prefs.selectedASRModelID ?? "\(prefs.asrModel.rawValue.capitalized) \(prefs.modelSize.rawValue.capitalized)"
+private struct SettingsSnapshotView: View {
+    var body: some View {
+        let prefs = PreferencesStore.shared.current
+        return VStack(alignment: .leading, spacing: 20) {
+            Text("Current configuration")
+                .font(.system(size: 24, weight: .bold))
+                .foregroundStyle(Color.white)
+            Grid(alignment: .leading, horizontalSpacing: 18, verticalSpacing: 12) {
+                snapshotRow(label: "Default mode", value: prefs.defaultMode.rawValue.capitalized)
+                snapshotRow(label: "PTT", value: prefs.pttMode.rawValue)
+                snapshotRow(label: "ASR model", value: prefs.selectedASRModelID ?? prefs.asrModel.rawValue)
+                snapshotRow(label: "Noise model", value: prefs.selectedNoiseModelID ?? prefs.noiseModel.rawValue)
+                snapshotRow(label: "Language", value: prefs.language)
+                snapshotRow(label: "Offline mode", value: prefs.offlineMode ? "Enabled" : "Disabled")
+            }
+            Spacer()
+        }
+        .padding(30)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.white.opacity(0.04))
     }
 
-    private func openURL(_ string: String) {
-        guard let url = URL(string: string) else { return }
-        NSWorkspace.shared.open(url)
-    }
-
-    private func copyToPasteboard(_ string: String) {
-        let pb = NSPasteboard.general
-        pb.clearContents()
-        pb.setString(string, forType: .string)
+    private func snapshotRow(label: String, value: String) -> some View {
+        GridRow {
+            Text(label.uppercased())
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color.white.opacity(0.6))
+            Text(value)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(Color.white)
+        }
     }
 }
 
-private extension Date {
-    func relativeDescription() -> String {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .short
-        return formatter.localizedString(for: self, relativeTo: Date())
+private struct SupportView: View {
+    let openURL: (String) -> Void
+
+    var body: some View {
+        VStack(spacing: 18) {
+            Text("We're here to help")
+                .font(.system(size: 26, weight: .bold))
+                .foregroundStyle(Color.white)
+            Text("Access documentation, shortcuts, and contact options without leaving the app.")
+                .foregroundStyle(Color.white.opacity(0.7))
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 360)
+            VStack(spacing: 12) {
+                SupportLink(title: "Open quickstart guide", icon: "book.fill", color: .blue) {
+                    openURL("https://docs.mjvoice.app/guide")
+                    EventLogStore.shared.record(type: .helpOpened, message: "Opened quickstart guide")
+                }
+                SupportLink(title: "Keyboard shortcut cheat sheet", icon: "command", color: .purple) {
+                    openURL("https://docs.mjvoice.app/shortcuts")
+                    EventLogStore.shared.record(type: .helpOpened, message: "Viewed shortcut cheat sheet")
+                }
+                SupportLink(title: "Chat with support", icon: "bubble.left.and.bubble.right.fill", color: .green) {
+                    openURL("mailto:support@mjvoice.app")
+                    EventLogStore.shared.record(type: .helpOpened, message: "Requested support conversation")
+                }
+            }
+            Spacer()
+        }
+        .padding(40)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.white.opacity(0.04))
     }
 }
+
+private struct SupportLink: View {
+    let title: String
+    let icon: String
+    let color: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 16) {
+                Circle().fill(color.opacity(0.18)).frame(width: 44, height: 44)
+                    .overlay(Image(systemName: icon).font(.system(size: 18, weight: .semibold)).foregroundStyle(color))
+                Text(title)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Color.white)
+                Spacer()
+                Image(systemName: "arrow.uturn.up")
+                    .foregroundStyle(Color.white.opacity(0.4))
+            }
+            .padding(18)
+            .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Color.white.opacity(0.05)))
+            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Color.white.opacity(0.08), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Extensions
 
 extension Notification.Name {
     static let dashboardNavigate = Notification.Name("dashboardNavigate")
+}
+
+extension Date {
+    func relativeDescription() -> String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter.localizedString(for: self, relativeTo: Date())
+    }
 }
