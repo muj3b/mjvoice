@@ -258,10 +258,16 @@ struct PreferencesView: View {
     private func installFluidRuntime() {
         guard !isInstallingFluidRuntime else { return }
         isInstallingFluidRuntime = true
-        fluidInstallStatus = "Installing…"
+        fluidInstallStatus = "Starting…"
         Task {
             do {
-                let url = try await DictationRuntimeHelper.installFluidRuntime()
+                let url = try await DictationRuntimeHelper.installFluidRuntime { message in
+                    Task { @MainActor in
+                        if isInstallingFluidRuntime {
+                            fluidInstallStatus = message
+                        }
+                    }
+                }
                 await MainActor.run {
                     isInstallingFluidRuntime = false
                     fluidInstallStatus = "Installed at \(url.path)"
@@ -430,7 +436,7 @@ private struct ToggleRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Toggle(isOn: $isOn) {
+            Toggle(isOn: interceptBinding) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(.system(size: 13, weight: .semibold))
@@ -443,6 +449,16 @@ private struct ToggleRow: View {
             }
         }
     }
+
+    private var interceptBinding: Binding<Bool> {
+        Binding(
+            get: { isOn },
+            set: { newValue in
+                SoundEffects.shared.play(newValue ? .toggleOn : .toggleOff)
+                isOn = newValue
+            }
+        )
+    }
 }
 
 private struct PickerRow<Selection: Hashable>: View {
@@ -454,13 +470,23 @@ private struct PickerRow<Selection: Hashable>: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.system(size: 13, weight: .semibold))
-            Picker(title, selection: $selection) {
+            Picker(title, selection: interceptBinding) {
                 ForEach(items, id: \.0) { item in
                     Text(item.1).tag(item.0)
                 }
             }
             .pickerStyle(.segmented)
         }
+    }
+
+    private var interceptBinding: Binding<Selection> {
+        Binding(
+            get: { selection },
+            set: { newValue in
+                SoundEffects.shared.play(.selectionChange)
+                selection = newValue
+            }
+        )
     }
 }
 
@@ -471,7 +497,10 @@ private struct ButtonRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Button(action: action) {
+            Button(action: {
+                SoundEffects.shared.play(.actionConfirm)
+                action()
+            }) {
                 HStack {
                     Text(title)
                         .font(.system(size: 13, weight: .semibold))
@@ -600,7 +629,7 @@ struct HotkeyRecorder: NSViewRepresentable {
 }
 
 enum DictationRuntimeHelper {
-    static func installFluidRuntime() async throws -> URL {
+    static func installFluidRuntime(progress: @escaping (String) -> Void = { _ in }) async throws -> URL {
         let fm = FileManager.default
         let support = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         let base = support.appendingPathComponent("mjvoice", isDirectory: true)
@@ -611,20 +640,8 @@ enum DictationRuntimeHelper {
             return runner
         }
 
-        if ProcessInfo.processInfo.environment["APP_SANDBOX_CONTAINER_ID"] != nil {
-            throw RuntimeInstallError.sandboxedInstruction
-        }
-        throw RuntimeInstallError.sandboxedInstruction
-    }
-
-    enum RuntimeInstallError: LocalizedError {
-        case sandboxedInstruction
-
-        var errorDescription: String? {
-            switch self {
-            case .sandboxedInstruction:
-                return "mjvoice runs inside the App Sandbox. Open Tools → Install Fluid Runtime from Terminal using tools/install_fluid_runner.sh and try again."
-            }
+        return try await FluidRuntimeInstaller.shared.install { message in
+            progress(message)
         }
     }
 }

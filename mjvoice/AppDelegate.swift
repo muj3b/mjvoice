@@ -20,7 +20,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         SecureInputMonitor.shared.start()
 
         if !PreferencesStore.shared.current.hasCompletedOnboarding {
-            showOnboarding()
+            showOnboarding(resetProgress: false)
         } else {
             dashboardController.show()
         }
@@ -63,7 +63,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         _ = AXIsProcessTrustedWithOptions(opts)
     }
 
-    private func showOnboarding() {
+    func showOnboarding(resetProgress: Bool = false) {
+        if resetProgress {
+            PreferencesStore.shared.update { $0.hasCompletedOnboarding = false }
+        }
+        onboardingWindow?.close()
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
             styleMask: [.titled, .closable],
@@ -90,10 +94,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func activeScreen() -> NSScreen? {
+        if let screen = NSApp.keyWindow?.screen ?? NSApp.mainWindow?.screen {
+            return screen
+        }
+        if let primary = NSScreen.main {
+            return primary
+        }
         let mouseLocation = NSEvent.mouseLocation
         if let screen = NSScreen.screens.first(where: { NSMouseInRect(mouseLocation, $0.frame, false) }) {
             return screen
         }
-        return NSScreen.main
+        return NSScreen.screens.first
     }
 }

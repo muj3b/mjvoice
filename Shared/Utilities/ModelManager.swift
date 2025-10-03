@@ -123,7 +123,13 @@ final class ModelManager: NSObject, @unchecked Sendable {
         "dtln-rs": ("dtln-rs-2025", "tflite", "BundledModels"),
         "rnnoise": ("rnnoise-classic", "bin", "BundledModels")
     ]
-    private lazy var session: URLSession = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
+    private lazy var session: URLSession = {
+        let configuration = URLSessionConfiguration.default
+        configuration.waitsForConnectivity = true
+        configuration.allowsExpensiveNetworkAccess = true
+        configuration.allowsConstrainedNetworkAccess = true
+        return URLSession(configuration: configuration, delegate: self, delegateQueue: nil)
+    }()
 
     private var installedRecords: [String: InstalledModelRecord] = [:]
     private var activeDownloads: [Int: DownloadContext] = [:]
@@ -638,4 +644,3 @@ private enum ModelCatalog {
         }
     }
 }
-

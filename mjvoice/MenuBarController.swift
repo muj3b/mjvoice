@@ -118,6 +118,10 @@ final class MenuBarController {
         notesItem.target = self
         menu.addItem(notesItem)
 
+        let quickStartItem = NSMenuItem(title: "Show Quick Start", action: #selector(showQuickStart), keyEquivalent: "")
+        quickStartItem.target = self
+        menu.addItem(quickStartItem)
+
         let helpItem = NSMenuItem(title: "Help & Guides", action: #selector(openHelp), keyEquivalent: "?")
         helpItem.keyEquivalentModifierMask = [.command]
         helpItem.target = self
@@ -163,6 +167,10 @@ final class MenuBarController {
     @objc private func openHelp() {
         openDashboardHandler()
         NotificationCenter.default.post(name: .dashboardNavigate, object: DashboardItem.support.rawValue)
+    }
+
+    @objc private func showQuickStart() {
+        (NSApp.delegate as? AppDelegate)?.showOnboarding(resetProgress: true)
     }
 
     @objc private func openSnippetManager() {

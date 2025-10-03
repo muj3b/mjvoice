@@ -47,6 +47,7 @@ final class AudioEngine: NSObject {
         }
         do {
             try engine.start()
+            SoundEffects.shared.play(.pttStart)
             NotificationCenter.default.post(name: .hudStateChanged, object: DictationOverlayState.listening)
         } catch {
             NSLog("[AudioEngine] Failed to start: \(error)")
@@ -61,6 +62,7 @@ final class AudioEngine: NSObject {
         running = false
         engine.inputNode.removeTap(onBus: converterBus)
         engine.stop()
+        SoundEffects.shared.play(.pttStop)
         NotificationCenter.default.post(name: .hudStateChanged, object: DictationOverlayState.thinking)
         let start = sessionStart
         sessionStart = nil
@@ -178,5 +180,57 @@ final class AudioEngine: NSObject {
                 }
             }
         }
+    }
+}
+
+enum SoundEffectEvent {
+    case pttStart
+    case pttStop
+    case toggleOn
+    case toggleOff
+    case selectionChange
+    case actionConfirm
+
+    var level: Float {
+        switch self {
+        case .pttStart:
+            return 0.36
+        case .pttStop:
+            return 0.34
+        case .toggleOn:
+            return 0.32
+        case .toggleOff:
+            return 0.28
+        case .selectionChange:
+            return 0.3
+        case .actionConfirm:
+            return 0.34
+        }
+    }
+}
+
+final class SoundEffects {
+    static let shared = SoundEffects()
+
+    private let queue = DispatchQueue(label: "app.soundeffects")
+    private let baseSoundName = NSSound.Name("Tock")
+
+    private init() {}
+
+    func play(_ event: SoundEffectEvent) {
+        queue.async {
+            guard let sound = self.makeSoundInstance() else { return }
+            sound.stop()
+            sound.currentTime = 0
+            sound.volume = event.level
+            sound.play()
+        }
+    }
+
+    private func makeSoundInstance() -> NSSound? {
+        if let cloned = NSSound(named: baseSoundName)?.copy() as? NSSound {
+            return cloned
+        }
+        return NSSound(named: baseSoundName)
     }
 }

@@ -5,6 +5,8 @@ final class DictationOverlayWindow: NSPanel {
     private let viewModel = DictationOverlayViewModel()
     private let hostingController: NSHostingController<DictationOverlayView>
     private var currentScreen: NSScreen?
+    private var hideWorkItem: DispatchWorkItem?
+    private var safeguardWorkItem: DispatchWorkItem?
 
     override init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing backingStoreType: NSWindow.BackingStoreType, defer flag: Bool) {
         hostingController = NSHostingController(rootView: DictationOverlayView(model: viewModel))
@@ -37,25 +39,26 @@ final class DictationOverlayWindow: NSPanel {
         if !isVisible {
             orderFrontRegardless()
         }
+        cancelHide()
         viewModel.state = .listening
+        scheduleSafeguard()
     }
 
     func hide() {
         viewModel.state = .idle
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
-            guard let self else { return }
-            if self.viewModel.state == .idle {
-                self.orderOut(nil)
-            }
-        }
+        scheduleHide(after: 0.2)
     }
 
     func updateState(_ state: DictationOverlayState) {
-        viewModel.state = state
         if state == .idle {
-            hide()
+            viewModel.state = .idle
+            scheduleHide(after: 0.18)
+            cancelSafeguard()
         } else {
+            viewModel.state = state
+            cancelHide()
             ensureVisible()
+            scheduleSafeguard()
         }
     }
 
@@ -82,6 +85,37 @@ final class DictationOverlayWindow: NSPanel {
         DispatchQueue.main.async { [weak self] in
             self?.updateState(state)
         }
+    }
+
+    private func scheduleHide(after delay: TimeInterval) {
+        cancelHide()
+        let work = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.orderOut(nil)
+        }
+        hideWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
+    }
+
+    private func cancelHide() {
+        hideWorkItem?.cancel()
+        hideWorkItem = nil
+    }
+
+    private func scheduleSafeguard() {
+        cancelSafeguard()
+        let work = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.viewModel.state = .idle
+            self.scheduleHide(after: 0.1)
+        }
+        safeguardWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 6.0, execute: work)
+    }
+
+    private func cancelSafeguard() {
+        safeguardWorkItem?.cancel()
+        safeguardWorkItem = nil
     }
 }
 
