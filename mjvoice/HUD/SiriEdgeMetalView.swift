@@ -102,7 +102,7 @@ final class SiriEdgeMetalView: MTKView {
         pipelineDescriptor.vertexFunction = vertexFunction
         pipelineDescriptor.fragmentFunction = fragmentFunction
         pipelineDescriptor.vertexDescriptor = vertexDescriptor
-        pipelineDescriptor.colorAttachments[0].pixelFormat = .rgba16Float
+        pipelineDescriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
         pipelineDescriptor.colorAttachments[0].isBlendingEnabled = true
         pipelineDescriptor.colorAttachments[0].rgbBlendOperation = .add
         pipelineDescriptor.colorAttachments[0].alphaBlendOperation = .add
@@ -119,8 +119,17 @@ final class SiriEdgeMetalView: MTKView {
 
         super.init(frame: frameRect, device: metalDevice)
 
+        if let metalLayer = self.layer as? CAMetalLayer {
+            metalLayer.isOpaque = false
+            metalLayer.backgroundColor = NSColor.clear.cgColor
+        }
+        self.wantsLayer = true
+        self.layer?.backgroundColor = NSColor.clear.cgColor
+
+        layer?.isOpaque = false
+
         framebufferOnly = false
-        colorPixelFormat = .rgba16Float
+        colorPixelFormat = .bgra8Unorm
         clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 0)
         preferredFramesPerSecond = 120
         isPaused = false
@@ -268,14 +277,14 @@ final class SiriEdgeMetalView: MTKView {
 
 extension SiriEdgeMetalView {
     static func cornerRadius(for screen: NSScreen) -> Float {
-        if let value = screen.value(forKey: "_displayCornerRadius") as? CGFloat, value > 0 {
-            return Float(value)
-        }
-        if #available(macOS 13.0, *) {
+        // Prefer public API only. On macOS 12+, built-in displays with a notch report a non-zero top safe area inset.
+        if #available(macOS 12.0, *) {
             if screen.safeAreaInsets.top > 0 {
+                // Slightly smaller radius looks better when there's a notch.
                 return 12
             }
         }
+        // Conservative default that looks good on most rounded displays and external monitors.
         return 16
     }
 }
@@ -305,6 +314,15 @@ extension SiriEdgeMetalView: MTKViewDelegate {
         updateFlowOffsets(delta: animationDelta)
         updateExposure()
 
+        let scale = window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 1.0
+        let targetDrawableSize = CGSize(width: bounds.width * scale, height: bounds.height * scale)
+        if drawableSize != targetDrawableSize {
+            drawableSize = targetDrawableSize
+        }
+
+        uniforms.resolutionCornerQuality.x = Float(drawableSize.width)
+        uniforms.resolutionCornerQuality.y = Float(drawableSize.height)
+
         uniforms.timeAudio.x = Float(currentTime - startTime)
         uniforms.resolutionCornerQuality.z = Float(cornerRadius)
 
@@ -323,3 +341,4 @@ extension SiriEdgeMetalView: MTKViewDelegate {
         commandBuffer.commit()
     }
 }
+

@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -89,16 +89,16 @@
 		46CB3FC922D61116DF16EF97 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		46FE9B3047A3869F1B390643 /* LLMServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMServiceProtocol.swift; sourceTree = "<group>"; };
 		473B57A339C3D99DB05F27A0 /* WhisperEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhisperEngine.swift; sourceTree = "<group>"; };
-		4E050402D0CA0DC68BC92F89 /* fluid-light.onnx */ = {isa = PBXFileReference; path = "fluid-light.onnx"; sourceTree = "<group>"; };
+		4E050402D0CA0DC68BC92F89 /* fluid-light.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; path = "fluid-light.onnx"; sourceTree = "<group>"; };
 		4FE3DC7B90EFBE8FEA5EEF3A /* Preferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
 		53B241A7F2371837C133075E /* DictationOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictationOverlayView.swift; sourceTree = "<group>"; };
 		5CD901DFD9D471C49B68B3E5 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		6252AC9F55CA7897470BA44B /* SnippetStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetStore.swift; sourceTree = "<group>"; };
 		7045D553D5D8220618EE1D62 /* FluidRuntimeInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FluidRuntimeInstaller.swift; sourceTree = "<group>"; };
 		70B67A0DF05B91300EA177BB /* GlobalHotkey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotkey.swift; sourceTree = "<group>"; };
-		75B311400B0E9B8BF042F664 /* dtln-rs-2025.tflite */ = {isa = PBXFileReference; path = "dtln-rs-2025.tflite"; sourceTree = "<group>"; };
+		75B311400B0E9B8BF042F664 /* dtln-rs-2025.tflite */ = {isa = PBXFileReference; lastKnownFileType = file; path = "dtln-rs-2025.tflite"; sourceTree = "<group>"; };
 		771EC14BE88169328839CB74 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
-		77F1EC7D279DE9014262C84D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		77F1EC7D279DE9014262C84D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		77F4556077FE4A4D8C426C43 /* AudioVADServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioVADServiceProtocol.swift; sourceTree = "<group>"; };
 		782A13F82BCB1D6410CC320D /* PerformanceMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceMetrics.swift; sourceTree = "<group>"; };
 		7CA59EEDE9F8160E3433E1B8 /* mjvoice.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = mjvoice.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -117,6 +117,7 @@
 		AD864BC85A4BEF386EC75C0A /* ggml-whisper-small.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = "ggml-whisper-small.bin"; sourceTree = "<group>"; };
 		B1D52BFC9882D8A89528E11B /* ggml-whisper-base.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = "ggml-whisper-base.bin"; sourceTree = "<group>"; };
 		B50BC02652140BEE182D0CB9 /* ASRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ASRService.swift; sourceTree = "<group>"; };
+		B83988412E908D7C00F8E002 /* DictationButtonWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictationButtonWindow.swift; sourceTree = "<group>"; };
 		BA1484B28CD5DFBE09C724A2 /* ASRClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ASRClient.swift; sourceTree = "<group>"; };
 		BA705656F30E55E36FD3793B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		BBE7ADFCE40AFCBE2B0A1CCD /* SiriEdgeMetalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiriEdgeMetalView.swift; sourceTree = "<group>"; };
@@ -135,14 +136,14 @@
 		D7F9184A0B2754C994DEB7FB /* ASRService.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ASRService.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC302E606BB456F64317FCF2 /* VisualEffectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualEffectView.swift; sourceTree = "<group>"; };
 		DD188581E00E56075AE4EE4D /* AudioVADService.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AudioVADService.entitlements; sourceTree = "<group>"; };
-		DFB76C36329A726CC26D340B /* fluid-pro.onnx */ = {isa = PBXFileReference; path = "fluid-pro.onnx"; sourceTree = "<group>"; };
-		E0A664043E7CA1689B328676 /* silero-vad-unified-256ms-v6.0.0.mlmodelc */ = {isa = PBXFileReference; path = "silero-vad-unified-256ms-v6.0.0.mlmodelc"; sourceTree = "<group>"; };
+		DFB76C36329A726CC26D340B /* fluid-pro.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; path = "fluid-pro.onnx"; sourceTree = "<group>"; };
+		E0A664043E7CA1689B328676 /* silero-vad-unified-256ms-v6.0.0.mlmodelc */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = "silero-vad-unified-256ms-v6.0.0.mlmodelc"; sourceTree = "<group>"; };
 		E7AC6518A755DDC51D1D4256 /* FluidEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FluidEngine.swift; sourceTree = "<group>"; };
 		EE37540014BA31BA1B03F0CA /* SpeechRecognitionEngineApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognitionEngineApp.swift; sourceTree = "<group>"; };
 		EE484BCCB9608934E4998076 /* DictationOverlayWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictationOverlayWindow.swift; sourceTree = "<group>"; };
 		EF086E21E270B11EB2BABECC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		F2D566F6537E0D862150B16E /* SpeechRecognitionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognitionEngine.swift; sourceTree = "<group>"; };
-		F9E12D7797ECEE2E85E47209 /* fluid-advanced.onnx */ = {isa = PBXFileReference; path = "fluid-advanced.onnx"; sourceTree = "<group>"; };
+		F9E12D7797ECEE2E85E47209 /* fluid-advanced.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; path = "fluid-advanced.onnx"; sourceTree = "<group>"; };
 		FA44A4AA8B525D983D95B5F6 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		FE196E46ED83D30031F903E3 /* mjvoice.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = mjvoice.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -360,6 +361,7 @@
 				82B65795DE15F8ACF9007499 /* VAD */,
 				FA2038C6DE1DB50AE9F4115C /* XPCProtocols */,
 				932B0DECA371F0B3421D83AB /* Products */,
+				B83988412E908D7C00F8E002 /* DictationButtonWindow.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -470,7 +472,6 @@
 			packageReferences = (
 				FE3BD59A193E188ED0748901 /* XCRemoteSwiftPackageReference "WhisperKit" */,
 			);
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (

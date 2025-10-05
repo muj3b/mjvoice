@@ -8,6 +8,8 @@ struct PreferencesView: View {
     @State private var noiseDownloadProgress: Double = 0
     @State private var isDownloadingASR = false
     @State private var isDownloadingNoise = false
+    @State private var asrDownloadHandle: ModelManager.DownloadHandle? = nil
+    @State private var noiseDownloadHandle: ModelManager.DownloadHandle? = nil
     @State private var installedASR: [InstalledModelRecord] = []
     @State private var installedNoise: [InstalledModelRecord] = []
     @State private var alertMessage: String?
@@ -92,10 +94,19 @@ struct PreferencesView: View {
 
                 if isDownloadingASR {
                     ProgressView(value: asrDownloadProgress) { Text("Downloading ASR model…") }
-                }
-
-                ButtonRow(title: "Download \(prefs.asrModel == .whisper ? "Whisper" : "Fluid") \(prefs.modelSize.rawValue.capitalized) model") {
-                    startASRDownload()
+                    HStack {
+                        Button("Cancel download") {
+                            asrDownloadHandle?.cancel()
+                            asrDownloadHandle = nil
+                            isDownloadingASR = false
+                        }
+                        .buttonStyle(.bordered)
+                        Spacer()
+                    }
+                } else {
+                    ButtonRow(title: "Download \(prefs.asrModel == .whisper ? "Whisper" : "Fluid") \(prefs.modelSize.rawValue.capitalized) model") {
+                        startASRDownload()
+                    }
                 }
 
                 ButtonRow(title: "Install Fluid runtime", subtitle: fluidInstallStatus) {
@@ -116,10 +127,19 @@ struct PreferencesView: View {
 
                 if isDownloadingNoise {
                     ProgressView(value: noiseDownloadProgress) { Text("Downloading noise model…") }
-                }
-
-                ButtonRow(title: "Download \(prefs.noiseModel == .dtln_rs ? "dtln-rs" : "RNNoise") model") {
-                    startNoiseDownload()
+                    HStack {
+                        Button("Cancel download") {
+                            noiseDownloadHandle?.cancel()
+                            noiseDownloadHandle = nil
+                            isDownloadingNoise = false
+                        }
+                        .buttonStyle(.bordered)
+                        Spacer()
+                    }
+                } else {
+                    ButtonRow(title: "Download \(prefs.noiseModel == .dtln_rs ? "dtln-rs" : "RNNoise") model") {
+                        startNoiseDownload()
+                    }
                 }
 
                 if !installedNoise.isEmpty {
@@ -219,9 +239,10 @@ struct PreferencesView: View {
         guard !isDownloadingASR else { return }
         isDownloadingASR = true
         asrDownloadProgress = 0
-        modelManager.downloadDefaultModel(for: prefs.asrModel, size: prefs.modelSize) { progress in
+        asrDownloadHandle = modelManager.downloadDefaultModel(for: prefs.asrModel, size: prefs.modelSize) { progress in
             asrDownloadProgress = progress
         } completion: { result in
+            asrDownloadHandle = nil
             isDownloadingASR = false
             switch result {
             case .success(let url):
@@ -239,9 +260,10 @@ struct PreferencesView: View {
         guard !isDownloadingNoise else { return }
         isDownloadingNoise = true
         noiseDownloadProgress = 0
-        modelManager.downloadDefaultNoiseModel(prefs.noiseModel) { progress in
+        noiseDownloadHandle = modelManager.downloadDefaultNoiseModel(prefs.noiseModel) { progress in
             noiseDownloadProgress = progress
         } completion: { result in
+            noiseDownloadHandle = nil
             isDownloadingNoise = false
             switch result {
             case .success(let url):

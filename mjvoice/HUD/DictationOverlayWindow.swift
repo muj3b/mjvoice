@@ -6,7 +6,6 @@ final class DictationOverlayWindow: NSPanel {
     private let hostingController: NSHostingController<DictationOverlayView>
     private var currentScreen: NSScreen?
     private var hideWorkItem: DispatchWorkItem?
-    private var safeguardWorkItem: DispatchWorkItem?
 
     override init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing backingStoreType: NSWindow.BackingStoreType, defer flag: Bool) {
         hostingController = NSHostingController(rootView: DictationOverlayView(model: viewModel))
@@ -40,7 +39,6 @@ final class DictationOverlayWindow: NSPanel {
         }
         cancelHide()
         viewModel.state = .listening
-        scheduleSafeguard()
     }
 
     func hide() {
@@ -52,12 +50,10 @@ final class DictationOverlayWindow: NSPanel {
         if state == .idle {
             viewModel.state = .idle
             scheduleHide(after: 0.18)
-            cancelSafeguard()
         } else {
             viewModel.state = state
             cancelHide()
             ensureVisible()
-            scheduleSafeguard()
         }
     }
 
@@ -92,22 +88,6 @@ final class DictationOverlayWindow: NSPanel {
     private func cancelHide() {
         hideWorkItem?.cancel()
         hideWorkItem = nil
-    }
-
-    private func scheduleSafeguard() {
-        cancelSafeguard()
-        let work = DispatchWorkItem { [weak self] in
-            guard let self else { return }
-            self.viewModel.state = .idle
-            self.scheduleHide(after: 0.1)
-        }
-        safeguardWorkItem = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 6.0, execute: work)
-    }
-
-    private func cancelSafeguard() {
-        safeguardWorkItem?.cancel()
-        safeguardWorkItem = nil
     }
 }
 

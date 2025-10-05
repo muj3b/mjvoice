@@ -10,6 +10,7 @@ struct DictationOverlayView: View {
 
     var body: some View {
         SiriEdgeContainer(state: model.state)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .ignoresSafeArea()
             .background(Color.clear)
     }
@@ -24,6 +25,8 @@ private struct SiriEdgeContainer: NSViewRepresentable {
 
     func makeNSView(context: Context) -> SiriEdgeMetalView {
         let view = SiriEdgeMetalView(frame: .zero, device: MTLCreateSystemDefaultDevice())
+        view.translatesAutoresizingMaskIntoConstraints = true
+        view.autoresizingMask = [.width, .height]
         view.wantsLayer = true
         view.layer?.isOpaque = false
         view.layer?.backgroundColor = NSColor.clear.cgColor
@@ -31,6 +34,9 @@ private struct SiriEdgeContainer: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: SiriEdgeMetalView, context: Context) {
+        if let superview = nsView.superview {
+            nsView.frame = superview.bounds
+        }
         if state == .idle {
             nsView.deactivate()
         } else {
@@ -55,3 +61,4 @@ private struct SiriEdgeContainer: NSViewRepresentable {
         var lastState: DictationOverlayState = .idle
     }
 }
+

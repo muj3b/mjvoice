@@ -118,6 +118,8 @@ final class ASRClient {
     }
 
     private func selectEngine(for config: ASRConfig) throws -> any SpeechRecognitionEngine {
+        // The real engines (Whisper/Fluid) run inside the XPC service. The app target uses a no-op fallback
+        // if the XPC connection fails, to avoid linking service-only dependencies here.
         return NoopEngine()
     }
 }
